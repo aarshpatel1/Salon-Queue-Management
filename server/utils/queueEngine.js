@@ -169,7 +169,8 @@ export const matchNextCustomerForBarber = async (barberId) => {
     status: 'Waiting',
     $or: [
       { preferredBarber: barberId },
-      { preferredBarber: null }
+      { preferredBarber: null },
+      { preferredBarber: { $exists: false } }
     ]
   }).sort({ tokenSequence: 1 });
 

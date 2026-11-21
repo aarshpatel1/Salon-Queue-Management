@@ -36,15 +36,22 @@ export const getBarberByName = async (req, res) => {
       status: 'Waiting',
       $or: [
         { preferredBarber: barber._id },
-        { preferredBarber: null }
+        { preferredBarber: null },
+        { preferredBarber: { $exists: false } }
       ]
+    }).sort({ tokenSequence: 1 });
+
+    // Also get all waiting tokens so barber view can show the overall waiting queue
+    const allWaiting = await QueueToken.find({
+      status: { $in: ['Waiting', 'Called'] }
     }).sort({ tokenSequence: 1 });
 
     return res.json({
       success: true,
       barber,
       currentToken,
-      nextForYou
+      nextForYou,
+      allWaiting
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

@@ -432,6 +432,11 @@ export const getQueueSummary = async (req, res) => {
       status: { $in: ['Called', 'In chair'] }
     }).sort({ updatedAt: -1 });
 
+    // Full waiting queue list so home, tv, and reception can show all waiting customers
+    const waitingTokens = await QueueToken.find({
+      status: { $in: ['Waiting', 'Called'] }
+    }).sort({ tokenSequence: 1 });
+
     return res.json({
       success: true,
       salonConfig: config,
@@ -440,7 +445,8 @@ export const getQueueSummary = async (req, res) => {
       waitStats,
       barbers,
       upNext,
-      activeTokens
+      activeTokens,
+      waitingTokens
     });
   } catch (error) {
     console.error('Error in getQueueSummary:', error);

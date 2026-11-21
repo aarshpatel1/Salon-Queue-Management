@@ -1,0 +1,68 @@
+[
+  {
+    "_id": { "$oid": "673f20010000000000000001" },
+    "name": "Classic Signature Haircut",
+    "duration": 30,
+    "price": 180,
+    "isActive": true,
+    "category": "Hair",
+    "icon": "scissors",
+    "createdAt": { "$date": "2026-11-21T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T08:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f20010000000000000002" },
+    "name": "Precision Beard Sculpt & Lineup",
+    "duration": 20,
+    "price": 100,
+    "isActive": true,
+    "category": "Beard",
+    "icon": "beard",
+    "createdAt": { "$date": "2026-11-21T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T08:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f20010000000000000003" },
+    "name": "Botanical Hair Spa & Scalp Therapy",
+    "duration": 45,
+    "price": 450,
+    "isActive": true,
+    "category": "Spa",
+    "icon": "sparkles",
+    "createdAt": { "$date": "2026-11-21T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T08:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f20010000000000000004" },
+    "name": "Luxury Hot Towel Shave",
+    "duration": 25,
+    "price": 150,
+    "isActive": true,
+    "category": "Beard",
+    "icon": "beard",
+    "createdAt": { "$date": "2026-11-21T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T08:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f20010000000000000005" },
+    "name": "Charcoal Clay Detox Facial",
+    "duration": 35,
+    "price": 380,
+    "isActive": true,
+    "category": "Spa",
+    "icon": "sparkles",
+    "createdAt": { "$date": "2026-11-21T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T08:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f20010000000000000006" },
+    "name": "Natural Grey Blending & Tint",
+    "duration": 40,
+    "price": 500,
+    "isActive": true,
+    "category": "Hair",
+    "icon": "scissors",
+    "createdAt": { "$date": "2026-11-21T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T08:00:00.000Z" }
+  }
+]

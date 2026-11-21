@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
+import { getApiBase } from '../api/apiClient';
 
 const SocketContext = createContext(null);
 
@@ -9,7 +10,7 @@ export const SocketProvider = ({ children }) => {
   const [lastCalledAlert, setLastCalledAlert] = useState(null);
 
   useEffect(() => {
-    const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const serverUrl = getApiBase();
     const s = io(serverUrl, {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 10,
@@ -17,10 +18,10 @@ export const SocketProvider = ({ children }) => {
     });
 
     s.on('connect', () => {
-      console.log('Connected to Salon Queue WebSocket server');
+      console.log(`Connected to Salon Queue WebSocket server at: ${serverUrl}`);
     });
 
-    s.on('queue:updated', (data) => {
+    s.on('queue:updated', () => {
       setLastSyncTime(Date.now());
     });
 

@@ -1,29 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { Icon } from '@iconify/react';
 import apiRequest from '../api/apiClient';
 import { useSocket } from '../context/SocketContext';
-import {
-  Scissors,
-  Users,
-  Clock,
-  Sparkles,
-  Calendar,
-  AlertTriangle,
-  Lightbulb,
-  ArrowRight,
-  Tv,
-  Tablet,
-  UserCheck,
-  TrendingUp,
-  Shield,
-  CheckCircle2,
-  ChevronRight
-} from 'lucide-react';
+import CustomerProfileModal from '../components/CustomerProfileModal';
+import RealTimeTimeline from '../components/RealTimeTimeline';
 
 export default function Home() {
   const { lastSyncTime } = useSocket();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedToken, setSelectedToken] = useState(null);
 
   const fetchSummary = async () => {
     try {
@@ -46,335 +33,421 @@ export default function Home() {
   const waitStats = data?.waitStats;
   const barbers = data?.barbers || [];
   const isOnlineOpen = data?.isOnlineJoiningAllowed;
-
-  // Barber chip status styling helper
-  const getStatusChip = (status) => {
-    switch (status) {
-      case 'Available':
-        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      case 'Busy':
-        return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'On break':
-        return 'bg-amber-100 text-amber-700 border-amber-200';
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
+  const waitingTokens = data?.waitingTokens || data?.upNext || [];
 
   return (
-    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto">
-      {/* Top Banner / Salon Status Badge */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 md:p-5 rounded-3xl border border-purple-100 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-700 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-purple-500/20">
-            <Scissors className="w-6 h-6 -rotate-45" />
+    <div className="space-y-6 max-w-7xl mx-auto select-none py-1">
+      {/* Top Floating Island Header Pill */}
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-[#FFFFFF] p-5 md:p-6 rounded-[32px] border border-[#E4DBD0] shadow-xs">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-full bg-[#1C1A18] text-[#F7F3EE] flex items-center justify-center shadow-md">
+            <Icon icon="solar:scissors-bold" className="w-6 h-6 -rotate-45 text-[#C2B4A3]" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">
-              {config?.salonName || 'Branja Barber Studio'}
+            <h1 className="text-xl md:text-2xl font-black text-[#1C1A18] tracking-tight">
+              {config?.salonName || 'Élan Atelier'}
             </h1>
-            <p className="text-xs text-gray-500 font-medium">
-              Premium Grooming & Queue Management
+            <p className="text-xs text-[#4A4540] font-medium">
+              Minimalist Luxury Grooming • iOS 27 Dynamic Island Queue
             </p>
           </div>
         </div>
 
-        {/* 'Open · Closes 9 PM' or 'Closed' Badge */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <div
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-xs border ${
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-bold text-xs border ${
               isOnlineOpen
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                : 'bg-red-50 text-red-700 border-red-200'
+                ? 'bg-[#F7F3EE] text-[#1C1A18] border-[#E4DBD0]'
+                : 'bg-[#1C1A18] text-[#F7F3EE] border-[#4A4540]'
             }`}
           >
             <span
               className={`w-2 h-2 rounded-full ${
-                isOnlineOpen ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'
+                isOnlineOpen ? 'bg-[#22c55e] animate-pulse' : 'bg-[#ef4444]'
               }`}
             ></span>
-            <span>{isOnlineOpen ? 'Open · Closes 9 PM' : 'Closed'}</span>
+            <span>{isOnlineOpen ? 'Open • Closes 9:00 PM' : 'Queue Closed'}</span>
           </div>
 
           <NavLink
             to="/join"
-            className="hidden sm:inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-bold text-sm text-gray-900 bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-400 shadow-lg shadow-amber-300/40 transform hover:-translate-y-0.5 transition-all"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-xs bg-[#1C1A18] text-[#F7F3EE] hover:bg-[#4A4540] transition-all shadow-xs"
           >
-            <Sparkles className="w-4 h-4 text-purple-900" />
+            <Icon icon="solar:user-plus-bold" className="w-4 h-4 text-[#C2B4A3]" />
             <span>Join Queue</span>
           </NavLink>
         </div>
       </div>
 
-      {/* Main Grid: Hero Card & KPI Cards (Exact replica of Desktop UI Screenshot) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Hero Card (Matches Screenshot Dark Purple Gradient Banner) */}
-        <div className="lg:col-span-7 rounded-3xl bg-gradient-to-br from-[#2b0845] via-[#4d1377] to-[#7b2cbf] text-white p-6 md:p-8 relative overflow-hidden shadow-xl shadow-purple-900/20 flex flex-col justify-between">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl pointer-events-none"></div>
-
-          <div className="grid md:grid-cols-2 gap-6 items-center z-10">
-            {/* Salon Interior Preview Image */}
-            <div className="relative rounded-2xl overflow-hidden aspect-video md:aspect-4/3 shadow-2xl border border-white/20">
+      {/* Main Grid: Hero Island & KPI Floating Capsules */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        {/* Left Hero Dynamic Island Card */}
+        <div className="lg:col-span-7 rounded-[36px] bg-[#1C1A18] text-[#F7F3EE] p-6 md:p-8 border border-[#4A4540] shadow-xl flex flex-col justify-between space-y-6">
+          <div className="grid md:grid-cols-2 gap-6 items-center">
+            {/* Salon Interior Preview Image in Rounded Capsule */}
+            <div className="relative rounded-[28px] overflow-hidden aspect-video md:aspect-4/3 border border-[#4A4540] shadow-md">
               <img
                 src={config?.bannerImage || 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80'}
-                alt="Branja Salon Interior"
-                className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
+                alt="Élan Atelier Interior"
+                className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-              <div className="absolute bottom-3 left-3 text-white">
-                <span className="text-[10px] uppercase font-bold tracking-widest bg-purple-900/80 px-2 py-0.5 rounded-md border border-purple-400/40">
-                  Luxury Lounge
+              <div className="absolute bottom-3 left-3">
+                <span className="text-[10px] uppercase font-black tracking-widest bg-[#1C1A18] text-[#F7F3EE] px-3 py-1 rounded-full border border-[#4A4540]">
+                  Private Lounge
                 </span>
               </div>
             </div>
 
             {/* Hero Copy */}
-            <div className="space-y-4">
-              <span className="text-xs uppercase tracking-widest text-purple-200 font-semibold">
-                Your style, effortlessly.
+            <div className="space-y-3.5">
+              <span className="text-[10px] uppercase tracking-widest text-[#C2B4A3] font-black">
+                Dynamic Island Experience
               </span>
-              <h2 className="text-2xl md:text-3xl font-extrabold leading-tight tracking-tight">
-                Find your barber. <br />
-                Book your next fresh look.
+              <h2 className="text-xl md:text-2xl font-black leading-tight text-[#F7F3EE]">
+                Your styling session, <br />
+                on your schedule.
               </h2>
-              <p className="text-xs text-purple-200/90 leading-relaxed">
-                Join our real-time smart queue from your phone, watch live countdowns, and walk in right when your chair is ready.
+              <p className="text-xs text-[#E4DBD0] leading-relaxed">
+                Join our live queue, receive real-time telemetry via our floating dynamic island, and arrive exactly when your chair opens.
               </p>
 
               <div className="pt-2">
                 <NavLink
                   to="/join"
-                  className="inline-flex items-center gap-2.5 px-6 py-3 rounded-2xl font-bold text-sm text-gray-950 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-amber-200 shadow-xl shadow-amber-400/30 transform active:scale-95 transition-all"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-xs bg-[#F7F3EE] text-[#1C1A18] hover:bg-[#E4DBD0] transition-all shadow-md transform hover:-translate-y-0.5"
                 >
-                  <Sparkles className="w-4 h-4 text-purple-900" />
-                  <span>Join Queue</span>
-                  <ArrowRight className="w-4 h-4 text-purple-900" />
+                  <Icon icon="solar:user-plus-bold" className="w-4 h-4 text-[#1C1A18]" />
+                  <span>Get Live Queue Spot</span>
+                  <Icon icon="solar:arrow-right-linear" className="w-4 h-4" />
                 </NavLink>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right: 4 KPI Cards (Matching Desktop Demo) */}
+        {/* Right: 4 KPI Dynamic Island Capsules */}
         <div className="lg:col-span-5 grid grid-cols-2 gap-4">
           {/* Card 1: Live Waiting */}
-          <div className="bg-white p-5 rounded-3xl border border-purple-100 shadow-sm flex flex-col justify-between">
+          <div className="bg-[#FFFFFF] p-5 rounded-[28px] border border-[#E4DBD0] shadow-xs flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center">
-                <Users className="w-5 h-5" />
+              <span className="w-10 h-10 rounded-full bg-[#F7F3EE] text-[#1C1A18] flex items-center justify-center border border-[#E4DBD0]">
+                <Icon icon="solar:users-group-rounded-bold" className="w-5 h-5" />
               </span>
-              <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-black text-[#1C1A18] bg-[#E4DBD0] px-3 py-1 rounded-full border border-[#C2B4A3]">
                 Live
               </span>
             </div>
             <div className="mt-4">
-              <h3 className="text-2xl font-bold text-gray-900">
-                {waitStats?.waitingCount ?? 0}
+              <h3 className="text-3xl font-black text-[#1C1A18]">
+                {waitStats?.waitingCount ?? waitingTokens.length}
               </h3>
-              <p className="text-xs text-gray-500 font-medium">People Waiting</p>
-              <div className="mt-2 text-[11px] text-purple-700 font-semibold flex items-center gap-1">
-                <span>{waitStats?.isPaused ? 'Break Paused' : `~${waitStats?.waitMinutes ?? 0} min total wait`}</span>
+              <p className="text-xs text-[#4A4540] font-semibold">Clients Waiting</p>
+              <div className="mt-1 text-[11px] text-[#1C1A18] font-bold">
+                {waitStats?.isPaused ? 'Stylists On Break' : `~${waitStats?.waitMinutes ?? 0}m est. wait`}
               </div>
             </div>
           </div>
 
           {/* Card 2: Est. Wait Duration */}
-          <div className="bg-white p-5 rounded-3xl border border-purple-100 shadow-sm flex flex-col justify-between">
+          <div className="bg-[#FFFFFF] p-5 rounded-[28px] border border-[#E4DBD0] shadow-xs flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <Clock className="w-5 h-5" />
+              <span className="w-10 h-10 rounded-full bg-[#F7F3EE] text-[#1C1A18] flex items-center justify-center border border-[#E4DBD0]">
+                <Icon icon="solar:clock-circle-bold" className="w-5 h-5" />
               </span>
-              <span className="text-[11px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-black text-[#4A4540] bg-[#F7F3EE] px-3 py-1 rounded-full border border-[#E4DBD0]">
                 FCFS
               </span>
             </div>
             <div className="mt-4">
-              <h3 className="text-2xl font-bold text-gray-900">
+              <h3 className="text-3xl font-black text-[#1C1A18]">
                 {waitStats?.waitMinutes ?? 0}m
               </h3>
-              <p className="text-xs text-gray-500 font-medium">Est. Wait Ahead</p>
-              <div className="mt-2 text-[11px] text-gray-500">
-                Based on {waitStats?.activeBarbersCount ?? 0} active barbers
+              <p className="text-xs text-[#4A4540] font-semibold">Average Wait Ahead</p>
+              <div className="mt-1 text-[10px] text-[#4A4540]">
+                {waitStats?.activeBarbersCount ?? 0} active stylists on duty
               </div>
             </div>
           </div>
 
           {/* Card 3: Active Stylists */}
-          <div className="bg-white p-5 rounded-3xl border border-purple-100 shadow-sm flex flex-col justify-between">
+          <div className="bg-[#FFFFFF] p-5 rounded-[28px] border border-[#E4DBD0] shadow-xs flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                <Scissors className="w-5 h-5 -rotate-45" />
+              <span className="w-10 h-10 rounded-full bg-[#F7F3EE] text-[#1C1A18] flex items-center justify-center border border-[#E4DBD0]">
+                <Icon icon="solar:scissors-bold" className="w-5 h-5 -rotate-45" />
               </span>
-              <span className="text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
-                Today
+              <span className="text-[10px] font-black text-[#1C1A18] bg-[#E4DBD0] px-3 py-1 rounded-full border border-[#C2B4A3]">
+                Chairs
               </span>
             </div>
             <div className="mt-4">
-              <h3 className="text-2xl font-bold text-gray-900">
-                {barbers.filter(b => b.isOnDuty).length}
+              <h3 className="text-3xl font-black text-[#1C1A18]">
+                {barbers.filter((b) => b.isOnDuty).length}
               </h3>
-              <p className="text-xs text-gray-500 font-medium">Active Stylists</p>
-              <div className="mt-2 text-[11px] text-emerald-600 font-medium">
-                {barbers.filter(b => b.status === 'Available').length} Available now
+              <p className="text-xs text-[#4A4540] font-semibold">Active Stylists</p>
+              <div className="mt-1 text-[10px] text-[#1C1A18] font-bold">
+                {barbers.filter((b) => b.status === 'Available').length} Chairs Available
               </div>
             </div>
           </div>
 
-          {/* Card 4: Daily Total Capacity */}
-          <div className="bg-white p-5 rounded-3xl border border-purple-100 shadow-sm flex flex-col justify-between">
+          {/* Card 4: Services Pricing */}
+          <div className="bg-[#FFFFFF] p-5 rounded-[28px] border border-[#E4DBD0] shadow-xs flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <Shield className="w-5 h-5" />
+              <span className="w-10 h-10 rounded-full bg-[#F7F3EE] text-[#1C1A18] flex items-center justify-center border border-[#E4DBD0]">
+                <Icon icon="solar:tag-price-bold" className="w-5 h-5" />
               </span>
-              <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                ₹ INR
+              <span className="text-[10px] font-black text-[#1C1A18] bg-[#F7F3EE] px-3 py-1 rounded-full border border-[#E4DBD0]">
+                INR
               </span>
             </div>
             <div className="mt-4">
-              <h3 className="text-2xl font-bold text-gray-900">₹150+</h3>
-              <p className="text-xs text-gray-500 font-medium">Affordable Grooming</p>
-              <div className="mt-2 text-[11px] text-gray-500">
-                Haircut, Beard & Spa
+              <h3 className="text-3xl font-black text-[#1C1A18]">₹100+</h3>
+              <p className="text-xs text-[#4A4540] font-semibold">Signature Grooming</p>
+              <div className="mt-1 text-[10px] text-[#4A4540]">
+                Haircuts, Shave & Spa
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Live Queue Summary Card & Barber Status Chips */}
-      <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* Stylist Stations in Floating Pill Cards */}
+      <div className="bg-[#FFFFFF] p-6 md:p-8 rounded-[36px] border border-[#E4DBD0] shadow-xs space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E4DBD0] pb-3">
           <div>
-            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
-              Live Queue Summary & Barber Status
+            <h2 className="text-base font-black text-[#1C1A18] flex items-center gap-2">
+              <Icon icon="solar:scissors-bold" className="w-5 h-5 text-[#4A4540]" />
+              <span>Stylist Stations & Active Chair Sessions</span>
             </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {waitStats?.isPaused
-                ? 'Queue is currently paused (all barbers on break)'
-                : `${waitStats?.waitingCount ?? 0} people waiting · about ${waitStats?.waitMinutes ?? 0} min estimated wait`}
+            <p className="text-xs text-[#4A4540]">
+              Real-time chair tracking with second-by-second live timelines
             </p>
           </div>
-
-          <NavLink
-            to="/join"
-            className="px-5 py-2.5 rounded-xl font-bold text-xs text-white bg-purple-700 hover:bg-purple-800 shadow-md shadow-purple-200 transition-all cursor-pointer"
-          >
-            + Get In Line Now
-          </NavLink>
-        </div>
-
-        {/* Barber Chips */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
-          {barbers.map((barber) => (
-            <div
-              key={barber._id}
-              className="p-3.5 rounded-2xl border border-purple-100/80 bg-[#faf9fe] flex items-center gap-3 hover:border-purple-300 transition-all"
-            >
-              <img
-                src={barber.avatar}
-                alt={barber.name}
-                className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm shrink-0"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold text-xs text-gray-900 truncate">{barber.name}</p>
-                <div className="mt-1 flex items-center gap-1.5">
-                  <span
-                    className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusChip(
-                      barber.status
-                    )}`}
-                  >
-                    {barber.status}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Quick Navigation to the Other 6 Screens */}
-      <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 rounded-3xl p-6 text-white shadow-xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <h3 className="text-lg font-bold">Quick Access: The 7 Studio Screens</h3>
-            <p className="text-xs text-purple-200">
-              Access staff consoles, client status check, and TV display
-            </p>
-          </div>
-          <span className="text-[11px] bg-white/10 text-purple-200 px-3 py-1 rounded-full font-mono border border-white/10">
-            PIN: 1234
+          <span className="text-[10px] font-black text-[#1C1A18] bg-[#E4DBD0] px-3 py-1 rounded-full border border-[#C2B4A3]">
+            Real-Time Engine
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 pt-1">
+          {barbers.map((barber) => {
+            const currentCust = barber.currentCustomer;
+            const hasCustomer = currentCust && currentCust.tokenId;
+            const isServing = barber.status === 'Busy' && hasCustomer;
+
+            return (
+              <div
+                key={barber._id}
+                className={`p-4 rounded-[28px] border flex flex-col justify-between transition-all ${
+                  isServing
+                    ? 'border-[#1C1A18] bg-[#FFFFFF] shadow-sm'
+                    : barber.status === 'On break'
+                    ? 'border-[#E4DBD0] bg-[#F7F3EE]/60'
+                    : 'border-[#E4DBD0] bg-[#FFFFFF]'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <img
+                      src={barber.avatar}
+                      alt={barber.name}
+                      className="w-10 h-10 rounded-full object-cover border border-[#C2B4A3] shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-black text-xs text-[#1C1A18] truncate">{barber.name}</p>
+                      <span
+                        className={`inline-block text-[9px] font-black px-2.5 py-0.5 rounded-full border ${
+                          barber.status === 'Available'
+                            ? 'bg-[#1C1A18] text-[#F7F3EE] border-[#1C1A18]'
+                            : barber.status === 'Busy'
+                            ? 'bg-[#E4DBD0] text-[#1C1A18] border-[#C2B4A3]'
+                            : 'bg-[#F7F3EE] text-[#4A4540] border-[#E4DBD0]'
+                        }`}
+                      >
+                        {barber.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Real-time Timeline for Seated Guest */}
+                  {isServing && (
+                    <div className="mt-2 pt-2 border-t border-[#E4DBD0]">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-[#1C1A18] mb-1.5 px-1">
+                        <span>{currentCust.tokenNumber}</span>
+                        <span className="truncate max-w-[80px] text-[#4A4540]">
+                          {currentCust.customerName}
+                        </span>
+                      </div>
+                      <RealTimeTimeline
+                        startedAt={currentCust.startedAt || new Date()}
+                        estimatedDuration={currentCust.estimatedDuration || 30}
+                        status="In chair"
+                        compact={true}
+                      />
+                    </div>
+                  )}
+
+                  {!hasCustomer && (
+                    <p className="text-[10px] text-[#4A4540] italic pt-1 pl-1">
+                      {barber.status === 'On break' ? 'Taking rest' : 'Chair ready for call'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Live Waiting Queue in Floating Pill Capsules */}
+      <div className="bg-[#FFFFFF] p-6 md:p-8 rounded-[36px] border border-[#E4DBD0] shadow-xs space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E4DBD0] pb-3">
+          <div>
+            <h2 className="text-base font-black text-[#1C1A18] flex items-center gap-2">
+              <Icon icon="solar:users-group-rounded-bold" className="w-5 h-5 text-[#1C1A18]" />
+              <span>Live Waiting Queue ({waitingTokens.length})</span>
+            </h2>
+            <p className="text-xs text-[#4A4540]">
+              Click on your profile pill to inspect queue status (Self-removal disabled)
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black text-[#1C1A18] bg-[#E4DBD0] px-3.5 py-1 rounded-full border border-[#C2B4A3]">
+              Click pill to view
+            </span>
+            <NavLink
+              to="/join"
+              className="text-xs font-bold text-[#F7F3EE] bg-[#1C1A18] px-4 py-2 rounded-full hover:bg-[#4A4540] transition-colors"
+            >
+              + Join Queue
+            </NavLink>
+          </div>
+        </div>
+
+        {waitingTokens.length === 0 ? (
+          <div className="py-12 text-center text-[#4A4540]">
+            <Icon icon="solar:check-circle-bold" className="w-10 h-10 text-[#1C1A18] mx-auto mb-2" />
+            <p className="text-xs font-bold">Queue is clear! No clients waiting.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {waitingTokens.map((token, index) => {
+              const waitMins = token.joinedAt
+                ? Math.max(0, Math.floor((Date.now() - new Date(token.joinedAt).getTime()) / 60000))
+                : 0;
+
+              return (
+                <div
+                  key={token._id}
+                  onClick={() => setSelectedToken(token)}
+                  className="p-4 rounded-full border border-[#E4DBD0] bg-[#F7F3EE] hover:bg-[#FFFFFF] hover:border-[#1C1A18] transition-all cursor-pointer flex items-center justify-between shadow-xs px-5"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-xs font-black text-[#F7F3EE] bg-[#1C1A18] px-3 py-1 rounded-full shrink-0">
+                      {token.tokenNumber}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-[#1C1A18] truncate">
+                        {token.customerName}
+                      </p>
+                      <p className="text-[10px] text-[#4A4540] truncate">
+                        Pref: {token.preferredBarberName || 'Any'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0 ml-2">
+                    <span className="text-[10px] font-bold bg-[#E4DBD0] text-[#1C1A18] px-2.5 py-0.5 rounded-full border border-[#C2B4A3]">
+                      #{index + 1} • {waitMins}m
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Screen Directory in Pill Island */}
+      <div className="bg-[#1C1A18] rounded-[36px] p-6 md:p-8 text-[#F7F3EE] border border-[#4A4540] shadow-xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 border-b border-[#4A4540]/50 pb-3">
+          <div>
+            <h3 className="text-base font-black">Studio Screen Directory</h3>
+            <p className="text-xs text-[#C2B4A3]">
+              Direct access for staff consoles, client status checks, and settings
+            </p>
+          </div>
+          <span className="text-[10px] bg-[#4A4540] text-[#F7F3EE] px-4 py-1.5 rounded-full font-mono border border-[#4A4540] self-start md:self-auto font-bold">
+            Staff PIN: 1234
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
           <NavLink
             to="/join"
-            className="p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all border border-white/10 flex flex-col justify-between"
+            className="p-4 rounded-[28px] bg-[#4A4540]/30 hover:bg-[#4A4540]/50 transition-colors border border-[#4A4540] flex flex-col justify-between"
           >
-            <Sparkles className="w-5 h-5 text-amber-300 mb-2" />
+            <Icon icon="solar:user-plus-bold" className="w-5 h-5 text-[#F7F3EE] mb-2" />
             <div>
-              <p className="font-bold text-xs">1. Join Queue</p>
-              <p className="text-[10px] text-purple-200">Customer Mobile</p>
-            </div>
-          </NavLink>
-
-          <NavLink
-            to="/status/sample"
-            className="p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all border border-white/10 flex flex-col justify-between"
-          >
-            <Clock className="w-5 h-5 text-emerald-300 mb-2" />
-            <div>
-              <p className="font-bold text-xs">2. My Status</p>
-              <p className="text-[10px] text-purple-200">Phone Countdown</p>
+              <p className="font-bold text-xs text-[#F7F3EE]">1. Join Queue</p>
+              <p className="text-[10px] text-[#C2B4A3]">Guest Self Check-in</p>
             </div>
           </NavLink>
 
           <NavLink
             to="/reception"
-            className="p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all border border-white/10 flex flex-col justify-between"
+            className="p-4 rounded-[28px] bg-[#4A4540]/30 hover:bg-[#4A4540]/50 transition-colors border border-[#4A4540] flex flex-col justify-between"
           >
-            <Tablet className="w-5 h-5 text-purple-300 mb-2" />
+            <Icon icon="solar:calendar-bold" className="w-5 h-5 text-[#F7F3EE] mb-2" />
             <div>
-              <p className="font-bold text-xs">3. Reception</p>
-              <p className="text-[10px] text-amber-300">10" Tablet (PIN)</p>
+              <p className="font-bold text-xs text-[#F7F3EE]">2. Reception Console</p>
+              <p className="text-[10px] text-[#C2B4A3]">Tablet Mode (PIN)</p>
             </div>
           </NavLink>
 
           <NavLink
-            to="/barber/Dudu%20Tassa"
-            className="p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all border border-white/10 flex flex-col justify-between"
+            to="/barber/Aarav%20Patel"
+            className="p-4 rounded-[28px] bg-[#4A4540]/30 hover:bg-[#4A4540]/50 transition-colors border border-[#4A4540] flex flex-col justify-between"
           >
-            <UserCheck className="w-5 h-5 text-cyan-300 mb-2" />
+            <Icon icon="solar:scissors-bold" className="w-5 h-5 text-[#F7F3EE] mb-2" />
             <div>
-              <p className="font-bold text-xs">4. Barber View</p>
-              <p className="text-[10px] text-amber-300">Stylist Phone (PIN)</p>
+              <p className="font-bold text-xs text-[#F7F3EE]">3. Stylist Station</p>
+              <p className="text-[10px] text-[#C2B4A3]">Chair View (PIN)</p>
             </div>
           </NavLink>
 
+          {/* TV Screen: explicitly hidden on mobile devices! */}
           <NavLink
             to="/display"
-            className="p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all border border-white/10 flex flex-col justify-between"
+            className="hidden md:flex p-4 rounded-[28px] bg-[#4A4540]/30 hover:bg-[#4A4540]/50 transition-colors border border-[#4A4540] flex-col justify-between"
           >
-            <Tv className="w-5 h-5 text-pink-300 mb-2" />
+            <Icon icon="solar:tv-bold" className="w-5 h-5 text-[#F7F3EE] mb-2" />
             <div>
-              <p className="font-bold text-xs">5. Waiting TV</p>
-              <p className="text-[10px] text-purple-200">5-Meter Display</p>
+              <p className="font-bold text-xs text-[#F7F3EE]">4. Lounge TV Display</p>
+              <p className="text-[10px] text-[#C2B4A3]">Widescreen Mode</p>
             </div>
           </NavLink>
 
           <NavLink
             to="/admin"
-            className="p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all border border-white/10 flex flex-col justify-between"
+            className="p-4 rounded-[28px] bg-[#4A4540]/30 hover:bg-[#4A4540]/50 transition-colors border border-[#4A4540] flex flex-col justify-between"
           >
-            <TrendingUp className="w-5 h-5 text-yellow-300 mb-2" />
+            <Icon icon="solar:settings-bold" className="w-5 h-5 text-[#F7F3EE] mb-2" />
             <div>
-              <p className="font-bold text-xs">6. Admin Settings</p>
-              <p className="text-[10px] text-amber-300">Owner KPIs (PIN)</p>
+              <p className="font-bold text-xs text-[#F7F3EE]">5. Owner Settings</p>
+              <p className="text-[10px] text-[#C2B4A3]">Studio Config (PIN)</p>
             </div>
           </NavLink>
         </div>
       </div>
+
+      {/* Customer Profile Modal (Customer profile inspection - no self removal) */}
+      <CustomerProfileModal
+        token={selectedToken}
+        isOpen={!!selectedToken}
+        onClose={() => setSelectedToken(null)}
+        isStaffView={false}
+      />
     </div>
   );
 }

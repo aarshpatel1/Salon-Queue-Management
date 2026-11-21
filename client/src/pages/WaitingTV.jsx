@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import { NavLink } from 'react-router-dom';
+import { Icon } from '@iconify/react';
 import apiRequest from '../api/apiClient';
 import { useSocket } from '../context/SocketContext';
 import { playChime } from '../utils/audioChime';
-import { Scissors, Clock, Users, Sparkles, Volume2, Bell } from 'lucide-react';
+import RealTimeTimeline from '../components/RealTimeTimeline';
 
 export default function WaitingTV() {
   const { lastSyncTime, lastCalledAlert } = useSocket();
   const [summaryData, setSummaryData] = useState(null);
   const [calledFlashToken, setCalledFlashToken] = useState(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [isMobileScreen, setIsMobileScreen] = useState(() => window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileScreen(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchTVData = async () => {
     try {
@@ -31,10 +42,9 @@ export default function WaitingTV() {
       setCalledFlashToken(lastCalledAlert);
       playChime();
 
-      // Clear flash after 4 seconds
       const timer = setTimeout(() => {
         setCalledFlashToken(null);
-      }, 4000);
+      }, 5000);
 
       return () => clearTimeout(timer);
     }
@@ -42,54 +52,74 @@ export default function WaitingTV() {
 
   const config = summaryData?.salonConfig;
   const barbers = summaryData?.barbers || [];
-  const upNext = summaryData?.upNext || [];
+  const upNext = summaryData?.waitingTokens || summaryData?.upNext || [];
   const waitStats = summaryData?.waitStats;
 
-  // Enable audio helper for browser autoplay policies
   const handleEnableAudio = () => {
     playChime();
     setAudioEnabled(true);
   };
 
+  // Mobile Screen Gate: TV Mode is explicitly hidden for mobile website!
+  if (isMobileScreen) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center select-none bg-[#1C1A18] text-[#F7F3EE]">
+        <div className="w-16 h-16 rounded-full bg-[#4A4540]/30 text-[#F7F3EE] flex items-center justify-center mb-4 border border-[#4A4540]">
+          <Icon icon="solar:tv-bold" className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl font-black mb-2">TV Lounge Mode Hidden on Mobile</h2>
+        <p className="text-xs text-[#C2B4A3] max-w-xs mb-6 leading-relaxed">
+          The 5-Meter TV Mode is designed exclusively for widescreen lounge displays in landscape mode. Please open on a desktop monitor or salon TV.
+        </p>
+        <NavLink
+          to="/"
+          className="px-6 py-3 rounded-full bg-[#F7F3EE] text-[#1C1A18] font-black text-xs"
+        >
+          Return to Mobile Dashboard
+        </NavLink>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#130324] text-white p-6 md:p-10 flex flex-col justify-between select-none">
-      {/* Called Banner Flash (Large Gold Overlay on TV Chime) */}
+    <div className="h-full bg-[#1C1A18] text-[#F7F3EE] p-6 md:p-10 flex flex-col justify-between select-none overflow-hidden">
+      {/* Called Banner Flash (iOS Dynamic Island Massive Alert Pill) */}
       {calledFlashToken && (
-        <div className="fixed top-8 left-8 right-8 z-50 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-gray-950 p-6 md:p-8 rounded-3xl shadow-2xl border-4 border-amber-200 animate-tv-flash flex items-center justify-between">
+        <div className="fixed top-8 left-8 right-8 z-50 bg-[#F7F3EE] text-[#1C1A18] p-6 md:p-8 rounded-[40px] shadow-2xl border-4 border-[#C2B4A3] flex items-center justify-between animate-in fade-in zoom-in-95 duration-200">
           <div className="flex items-center gap-6">
-            <div className="w-16 h-16 rounded-2xl bg-purple-950 text-amber-300 flex items-center justify-center animate-bounce shadow-xl">
-              <Sparkles className="w-8 h-8" />
+            <div className="w-16 h-16 rounded-full bg-[#1C1A18] text-[#F7F3EE] flex items-center justify-center shadow-lg border border-[#4A4540]">
+              <Icon icon="solar:scissors-bold" className="w-8 h-8 text-[#C2B4A3]" />
             </div>
             <div>
-              <span className="text-xs font-black uppercase tracking-widest bg-purple-950 text-white px-3 py-1 rounded-full">
+              <span className="text-xs font-black uppercase tracking-widest bg-[#E4DBD0] text-[#1C1A18] px-3.5 py-1 rounded-full">
                 Now Calling To Chair
               </span>
-              <h2 className="text-4xl md:text-6xl font-black tracking-tight mt-1">
+              <h2 className="text-3xl md:text-5xl font-black tracking-tight mt-1.5">
                 Token {calledFlashToken.tokenNumber} — {calledFlashToken.customerName}
               </h2>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-xs font-bold uppercase tracking-wider text-purple-950">Stylist</p>
-            <p className="text-2xl md:text-4xl font-black text-purple-950">
+            <p className="text-xs font-bold uppercase tracking-wider text-[#4A4540]">Stylist Station</p>
+            <p className="text-2xl md:text-4xl font-black text-[#1C1A18]">
               {calledFlashToken.barberName}
             </p>
           </div>
         </div>
       )}
 
-      {/* Top Header: Brand & Live Salon Stats */}
-      <div className="flex items-center justify-between border-b border-purple-900/60 pb-6">
+      {/* Top Header: Brand & Live Salon Stats in Pill */}
+      <div className="flex items-center justify-between border-b border-[#4A4540]/50 pb-6 shrink-0">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-purple-900/60">
-            <Scissors className="w-8 h-8 text-white -rotate-45" />
+          <div className="w-14 h-14 rounded-full bg-[#F7F3EE] flex items-center justify-center shadow-md">
+            <Icon icon="solar:scissors-bold" className="w-8 h-8 text-[#1C1A18] -rotate-45" />
           </div>
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-wider text-white">
-              {config?.salonName || 'BRANJA BARBER STUDIO'}
+            <h1 className="text-3xl md:text-4xl font-black tracking-wider text-[#F7F3EE]">
+              {config?.salonName || 'ÉLAN ATELIER'}
             </h1>
-            <p className="text-sm tracking-widest text-purple-300 uppercase">
-              Live Queue & Stylist Status
+            <p className="text-xs tracking-widest text-[#C2B4A3] uppercase font-bold">
+              Live Lounge Queue & Stylist Stations • Dynamic Island
             </p>
           </div>
         </div>
@@ -99,90 +129,117 @@ export default function WaitingTV() {
           {!audioEnabled && (
             <button
               onClick={handleEnableAudio}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-purple-800/80 hover:bg-purple-700 text-purple-200 text-xs font-semibold border border-purple-600 cursor-pointer"
+              className="px-5 py-2.5 rounded-full bg-[#4A4540]/40 hover:bg-[#4A4540]/70 text-[#F7F3EE] border border-[#4A4540] text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm"
             >
-              <Volume2 className="w-4 h-4 text-amber-300" />
-              <span>Enable Audio Chimes</span>
+              <Icon icon="solar:volume-loud-bold" className="w-4 h-4 text-[#C2B4A3]" />
+              <span>Enable Lounge Audio</span>
             </button>
           )}
 
           <div className="text-right">
-            <div className="flex items-center gap-2 justify-end text-emerald-400 text-xs font-bold uppercase tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-              <span>Live Updates</span>
-            </div>
-            <p className="text-2xl font-black text-white mt-0.5">
-              {waitStats?.waitingCount ?? 0} in queue · ~{waitStats?.waitMinutes ?? 0}m wait
+            <p className="text-xs uppercase font-bold tracking-widest text-[#C2B4A3]">
+              Estimated Wait
+            </p>
+            <p className="text-3xl font-black text-[#F7F3EE]">
+              ~{waitStats?.waitMinutes ?? 0} Mins
+            </p>
+            <p className="text-[11px] text-[#C2B4A3]">
+              {waitStats?.waitingCount ?? upNext.length} clients in line
             </p>
           </div>
         </div>
       </div>
 
-      {/* Main Content Area (Two Sections: Barber Chairs & Up Next 5) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 my-8 items-stretch flex-1">
-        {/* Left Section: Barber Chairs Status (Large 5m readable row per active barber) */}
-        <div className="lg:col-span-7 bg-[#1c0733]/80 rounded-3xl p-6 border border-purple-900/50 shadow-xl flex flex-col justify-between space-y-4">
-          <div className="flex items-center justify-between border-b border-purple-900/40 pb-3">
-            <h2 className="text-xl font-bold text-purple-200 flex items-center gap-2">
-              <Scissors className="w-5 h-5 text-purple-400 -rotate-45" />
-              <span>Stylist Chairs</span>
+      {/* Main Split Display: 7 Columns Barber Stations | 5 Columns Up Next */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 my-6 items-stretch flex-1 min-h-0 overflow-hidden">
+        {/* Left Section: Stylist Chairs in Pill Capsules */}
+        <div className="lg:col-span-7 space-y-4 flex flex-col justify-between overflow-y-auto pr-1 scrollbar-thin">
+          <div className="flex items-center justify-between border-b border-[#4A4540]/30 pb-3 shrink-0">
+            <h2 className="text-lg font-black text-[#F7F3EE] flex items-center gap-2">
+              <Icon icon="solar:scissors-bold" className="w-5 h-5 text-[#C2B4A3]" />
+              <span>Active Stylist Chairs</span>
             </h2>
-            <span className="text-xs uppercase tracking-widest text-purple-400 font-semibold">
-              Current Service
+            <span className="text-xs font-bold text-[#C2B4A3] uppercase tracking-wider">
+              {barbers.filter((b) => b.status === 'Available').length} Chairs Available
             </span>
           </div>
 
-          <div className="space-y-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 flex-1">
             {barbers.map((barber) => {
               const currentCust = barber.currentCustomer;
               const hasCustomer = currentCust && currentCust.tokenId;
+              const isBusy = barber.status === 'Busy';
               const isBreak = barber.status === 'On break';
 
               return (
                 <div
                   key={barber._id}
-                  className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${
-                    hasCustomer
-                      ? 'border-purple-500/60 bg-gradient-to-r from-purple-900/60 to-indigo-950/60 shadow-lg'
+                  className={`rounded-[32px] p-5 border flex flex-col justify-between ${
+                    isBusy
+                      ? 'border-[#C2B4A3] bg-[#4A4540]/30'
                       : isBreak
-                      ? 'border-amber-900/40 bg-amber-950/20'
-                      : 'border-purple-900/40 bg-purple-950/30'
+                      ? 'border-[#4A4540]/40 bg-[#4A4540]/10 opacity-70'
+                      : 'border-[#4A4540]/60 bg-[#4A4540]/20'
                   }`}
                 >
-                  {/* Barber Avatar & Name */}
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={barber.avatar}
-                      alt={barber.name}
-                      className="w-14 h-14 rounded-2xl object-cover ring-2 ring-purple-500/40"
-                    />
-                    <div>
-                      <h3 className="text-xl font-bold text-white">{barber.name}</h3>
-                      <p className="text-xs text-purple-300">
-                        {barber.specialty || 'Senior Stylist'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Status: 'Now: S-XX' or 'Available' */}
-                  <div className="text-right">
-                    {hasCustomer ? (
-                      <div>
-                        <span className="text-2xl md:text-3xl font-black text-amber-300 tracking-wider">
-                          Now: {currentCust.tokenNumber}
+                  <div>
+                    {/* Stylist Profile */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <img
+                        src={barber.avatar}
+                        alt={barber.name}
+                        className="w-12 h-12 rounded-full object-cover border border-[#C2B4A3] shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="font-black text-sm text-[#F7F3EE] truncate">
+                          {barber.name}
+                        </p>
+                        <span
+                          className={`text-[9px] font-black px-2.5 py-0.5 rounded-full inline-block border ${
+                            barber.status === 'Available'
+                              ? 'bg-[#F7F3EE] text-[#1C1A18] border-[#F7F3EE]'
+                              : barber.status === 'Busy'
+                              ? 'bg-[#1C1A18] text-[#F7F3EE] border-[#4A4540]'
+                              : 'bg-[#4A4540] text-[#E4DBD0] border-[#4A4540]'
+                          }`}
+                        >
+                          {barber.status}
                         </span>
-                        <p className="text-xs text-purple-200 font-medium">
-                          {currentCust.customerName}
+                      </div>
+                    </div>
+
+                    {/* Customer In Chair with Real-Time Timeline */}
+                    {hasCustomer ? (
+                      <div className="p-3.5 rounded-[24px] bg-[#1C1A18] border border-[#4A4540] space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-black text-[#F7F3EE]">
+                            {currentCust.tokenNumber}
+                          </span>
+                          <span className="text-xs font-bold text-[#E4DBD0] truncate max-w-[120px]">
+                            {currentCust.customerName}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-[#C2B4A3] truncate">
+                          {currentCust.services?.join(', ')}
+                        </p>
+
+                        {/* Real-time Timeline */}
+                        <div className="pt-1">
+                          <RealTimeTimeline
+                            startedAt={currentCust.startedAt || new Date()}
+                            estimatedDuration={currentCust.estimatedDuration || 30}
+                            status="In chair"
+                            compact={true}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-5 rounded-[24px] bg-[#1C1A18]/40 border border-dashed border-[#4A4540] text-center">
+                        <p className="text-xs text-[#C2B4A3] font-medium">Chair is open</p>
+                        <p className="text-[10px] text-[#F7F3EE] font-bold mt-0.5">
+                          Ready for next guest
                         </p>
                       </div>
-                    ) : isBreak ? (
-                      <span className="px-4 py-1.5 rounded-full text-xs font-bold bg-amber-950/80 text-amber-300 border border-amber-800/60">
-                        On Break
-                      </span>
-                    ) : (
-                      <span className="px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800/60">
-                        Available
-                      </span>
                     )}
                   </div>
                 </div>
@@ -191,71 +248,77 @@ export default function WaitingTV() {
           </div>
         </div>
 
-        {/* Right Section: 'Up next' list of next 5 waiting tokens */}
-        <div className="lg:col-span-5 bg-[#1c0733]/80 rounded-3xl p-6 border border-purple-900/50 shadow-xl flex flex-col justify-between space-y-4">
-          <div className="flex items-center justify-between border-b border-purple-900/40 pb-3">
-            <h2 className="text-xl font-bold text-purple-200 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-amber-400" />
+        {/* Right Section: Up Next in Line in Capsule Island */}
+        <div className="lg:col-span-5 bg-[#4A4540]/25 rounded-[36px] p-6 border border-[#4A4540] shadow-xl flex flex-col justify-between space-y-4 overflow-hidden">
+          <div className="flex items-center justify-between border-b border-[#4A4540]/40 pb-3 shrink-0">
+            <h2 className="text-lg font-black text-[#F7F3EE] flex items-center gap-2">
+              <Icon icon="solar:clock-circle-bold" className="w-5 h-5 text-[#C2B4A3]" />
               <span>Up Next in Line</span>
             </h2>
-            <span className="text-xs uppercase tracking-widest text-amber-300 font-bold">
-              Next 5 Tokens
+            <span className="text-xs uppercase tracking-widest text-[#E4DBD0] font-black">
+              Next 5 Tickets
             </span>
           </div>
 
           {upNext.length === 0 ? (
-            <div className="py-16 text-center text-purple-400/80">
-              <p className="text-lg font-bold">No Waiting Customers</p>
-              <p className="text-xs text-purple-400/60 mt-1">Chairs are ready for walk-ins!</p>
+            <div className="py-16 text-center text-[#C2B4A3]">
+              <Icon icon="solar:check-circle-bold" className="w-10 h-10 text-[#F7F3EE] mx-auto mb-2" />
+              <p className="text-base font-bold">No Waiting Clients</p>
+              <p className="text-xs text-[#C2B4A3] mt-1">Chairs are ready for walk-ins!</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {upNext.map((token, index) => (
+            <div className="space-y-2.5 flex-1 overflow-y-auto pr-1 scrollbar-thin">
+              {upNext.slice(0, 5).map((token, index) => (
                 <div
                   key={token._id}
-                  className={`p-4 rounded-2xl border flex items-center justify-between ${
+                  className={`p-4 rounded-full border flex items-center justify-between px-5 ${
                     index === 0
-                      ? 'border-amber-400/80 bg-gradient-to-r from-amber-500/20 to-purple-900/40 ring-1 ring-amber-400/50'
-                      : 'border-purple-900/40 bg-purple-950/30'
+                      ? 'border-[#F7F3EE] bg-[#1C1A18] shadow-md'
+                      : 'border-[#4A4540] bg-[#1C1A18]/60'
                   }`}
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3.5">
                     <span
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm ${
+                      className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs ${
                         index === 0
-                          ? 'bg-amber-400 text-gray-950'
-                          : 'bg-purple-900 text-purple-200'
+                          ? 'bg-[#F7F3EE] text-[#1C1A18]'
+                          : 'bg-[#4A4540] text-[#F7F3EE]'
                       }`}
                     >
                       #{index + 1}
                     </span>
                     <div>
-                      <p className="text-2xl font-black text-white">{token.tokenNumber}</p>
-                      <p className="text-xs text-purple-300 truncate max-w-[150px]">
+                      <p className="text-lg font-black text-[#F7F3EE]">{token.tokenNumber}</p>
+                      <p className="text-xs text-[#E4DBD0] truncate max-w-[150px]">
                         {token.customerName}
                       </p>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <span className="text-sm font-bold text-purple-200">
-                      ~{token.totalDuration} min
+                    <span className="text-xs font-bold text-[#F7F3EE]">
+                      Pref: {token.preferredBarberName || 'Any'}
                     </span>
-                    <p className="text-[10px] text-purple-400 uppercase tracking-wider">
-                      Pref: {token.preferredBarberName?.split(' ')[0] || 'Any'}
+                    <p className="text-[10px] text-[#C2B4A3]">
+                      ~{token.totalDuration} mins
                     </p>
                   </div>
                 </div>
               ))}
             </div>
           )}
+
+          <div className="pt-3 border-t border-[#4A4540]/40 flex items-center justify-between text-xs text-[#C2B4A3] shrink-0">
+            <span>Scan QR at desk to join queue</span>
+            <span className="font-mono text-[#F7F3EE]">iOS 27 Dynamic Island Engine</span>
+          </div>
         </div>
       </div>
 
-      {/* Footer Info */}
-      <div className="border-t border-purple-900/60 pt-4 flex flex-wrap items-center justify-between text-xs text-purple-400/80">
-        <p>Salon Closing Time: 9:00 PM (Online registration closes at 8:30 PM)</p>
-        <p>Please check your phone for live turn alerts and notifications.</p>
+      {/* Bottom Footer */}
+      <div className="border-t border-[#4A4540]/40 pt-4 flex items-center justify-between text-xs text-[#C2B4A3] shrink-0">
+        <p>Élan Atelier Lounge Display • Dynamic Island Live Telemetry</p>
+        <p>Real-time continuous sync active</p>
       </div>
     </div>
   );

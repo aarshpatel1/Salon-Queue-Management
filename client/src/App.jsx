@@ -2,12 +2,14 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { SocketProvider } from './context/SocketContext';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import PinModal from './components/PinModal';
 import ProtectedRoute from './components/ProtectedRoute';
+import DynamicIsland from './components/DynamicIsland';
 
-// 7 Screens
+// Pages
 import Home from './pages/Home';
 import JoinQueue from './pages/JoinQueue';
 import MyStatus from './pages/MyStatus';
@@ -18,12 +20,11 @@ import AdminSettings from './pages/AdminSettings';
 
 function AppLayout() {
   const location = useLocation();
-  // Display screen (/display) is designed for 5m TV display, full-screen without sidebar/navbar
   const isDisplayScreen = location.pathname.startsWith('/display');
 
   if (isDisplayScreen) {
     return (
-      <main className="min-h-screen bg-[#130324]">
+      <main className="h-[100dvh] max-h-[100dvh] w-screen overflow-hidden bg-[#1C1A18] text-[#F7F3EE]">
         <Routes>
           <Route path="/display" element={<WaitingTV />} />
         </Routes>
@@ -32,21 +33,26 @@ function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen flex bg-[#f8f6fc] text-slate-800">
-      {/* Desktop Violet Sidebar */}
+    <div className="h-[100dvh] max-h-[100dvh] w-screen overflow-hidden flex bg-[#F7F3EE] text-[#1C1A18] font-sans antialiased">
+      {/* iOS 27 Floating Dynamic Island Sidebar (Desktop) */}
       <Sidebar />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <Navbar />
-        <main className="flex-1 pb-16 md:pb-8">
+      {/* Main Content Area - Strictly 100% dvh with Vertically Scrollable Inside */}
+      <div className="flex-1 h-[100dvh] max-h-[100dvh] flex flex-col min-w-0 overflow-hidden">
+        {/* Floating Dynamic Island Navbar Header (Fixed at top inside 100% dvh) */}
+        <div className="shrink-0 px-3 md:px-6 pt-3 md:pt-4 pb-1 z-30">
+          <Navbar />
+        </div>
+
+        {/* Scrollable Viewport - Everything scrolls smoothly vertically */}
+        <main className="flex-1 overflow-y-auto min-h-0 px-3 md:px-6 py-3 pb-28 md:pb-16 scrollbar-thin">
           <Routes>
             {/* Public Screens */}
             <Route path="/" element={<Home />} />
             <Route path="/join" element={<JoinQueue />} />
             <Route path="/status/:id" element={<MyStatus />} />
 
-            {/* PIN-Protected Screens (persisted in sessionStorage) */}
+            {/* PIN-Protected Screens */}
             <Route
               path="/reception"
               element={
@@ -75,6 +81,9 @@ function AppLayout() {
         </main>
       </div>
 
+      {/* Floating iOS 27 Dynamic Island at Bottom Center */}
+      <DynamicIsland />
+
       {/* Global Staff PIN Modal */}
       <PinModal />
     </div>
@@ -85,9 +94,11 @@ export default function App() {
   return (
     <SocketProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <AppLayout />
-        </BrowserRouter>
+        <ToastProvider>
+          <BrowserRouter>
+            <AppLayout />
+          </BrowserRouter>
+        </ToastProvider>
       </AuthProvider>
     </SocketProvider>
   );

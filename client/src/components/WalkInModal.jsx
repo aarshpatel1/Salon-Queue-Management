@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Icon } from '@iconify/react';
 import apiRequest from '../api/apiClient';
-import { X, UserPlus, Scissors, Sparkles } from 'lucide-react';
+import CustomModal from './CustomModal';
+import CustomDropdown from './CustomDropdown';
+import { useToast } from '../context/ToastContext';
 
-export default function WalkInModal({ isOpen, onClose, onWalkInAdded, barbers, services }) {
+export default function WalkInModal({ isOpen, onClose, onWalkInAdded, barbers = [], services = [] }) {
+  const { addToast } = useToast();
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
   const [selectedServiceIds, setSelectedServiceIds] = useState([]);
@@ -21,10 +25,10 @@ export default function WalkInModal({ isOpen, onClose, onWalkInAdded, barbers, s
   const handleToggleService = (id) => {
     if (selectedServiceIds.includes(id)) {
       if (selectedServiceIds.length === 1) return;
-      setSelectedServiceIds(prev => prev.filter(sId => sId !== id));
+      setSelectedServiceIds((prev) => prev.filter((sId) => sId !== id));
     } else {
       if (selectedServiceIds.length >= 3) return;
-      setSelectedServiceIds(prev => [...prev, id]);
+      setSelectedServiceIds((prev) => [...prev, id]);
     }
   };
 
@@ -33,18 +37,18 @@ export default function WalkInModal({ isOpen, onClose, onWalkInAdded, barbers, s
     setError('');
 
     if (!customerName.trim()) {
-      setError('Name is required');
+      setError('Customer name is required');
       return;
     }
 
     const cleanPhone = phone.replace(/\D/g, '').slice(-10);
     if (cleanPhone.length !== 10) {
-      setError('Valid 10-digit phone required');
+      setError('Valid 10-digit phone number is required');
       return;
     }
 
     if (selectedServiceIds.length === 0) {
-      setError('Select at least 1 service');
+      setError('Please select at least 1 service');
       return;
     }
 
@@ -62,8 +66,11 @@ export default function WalkInModal({ isOpen, onClose, onWalkInAdded, barbers, s
       });
 
       if (res.success) {
+        addToast(`Walk-in added: ${res.token.customerName} (${res.token.tokenNumber})`, 'success');
         onWalkInAdded(res.token);
         onClose();
+        setCustomerName('');
+        setPhone('');
       } else {
         setError(res.message || 'Failed to add walk-in');
       }
@@ -74,117 +81,124 @@ export default function WalkInModal({ isOpen, onClose, onWalkInAdded, barbers, s
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-      <div className="bg-white rounded-3xl p-6 max-w-lg w-full border border-purple-100 shadow-2xl relative">
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 cursor-pointer"
-        >
-          <X className="w-5 h-5" />
-        </button>
+  const barberOptions = [
+    { value: '', label: 'Any Stylist (Fastest Available)' },
+    ...barbers.map((b) => ({
+      value: b._id,
+      label: `${b.name} (${b.status})`
+    }))
+  ];
 
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
-            <UserPlus className="w-5 h-5" />
+  return (
+    <CustomModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Add Walk-in Customer"
+      subtitle="Reception Quick Check-in (24/7 Active)"
+      icon="solar:user-plus-bold"
+      maxWidth="max-w-md"
+    >
+      <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+        {error && (
+          <div className="p-3 rounded-full bg-[#ef4444]/20 text-[#ef4444] text-xs font-bold flex items-center gap-2 px-5">
+            <Icon icon="solar:danger-triangle-bold" className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
           </div>
-          <div>
-            <h3 className="text-base font-bold text-gray-900">Add Walk-in Customer</h3>
-            <p className="text-xs text-gray-500">Reception Quick Entry (Allowed 24/7)</p>
+        )}
+
+        {/* Customer Name */}
+        <div>
+          <label className="block text-[10px] font-black text-[#4A4540] uppercase tracking-wider mb-1.5 pl-3">
+            Customer Name *
+          </label>
+          <input
+            type="text"
+            required
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+            placeholder="e.g. Liam Patel"
+            className="w-full px-5 py-3 bg-[#F7F3EE] border border-[#E4DBD0] rounded-full text-xs font-bold text-[#1C1A18] focus:outline-none focus:border-[#1C1A18]"
+          />
+        </div>
+
+        {/* Phone */}
+        <div>
+          <label className="block text-[10px] font-black text-[#4A4540] uppercase tracking-wider mb-1.5 pl-3">
+            Phone Number (10 digits) *
+          </label>
+          <input
+            type="tel"
+            required
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="e.g. 9876543210"
+            className="w-full px-5 py-3 bg-[#F7F3EE] border border-[#E4DBD0] rounded-full text-xs font-bold text-[#1C1A18] focus:outline-none focus:border-[#1C1A18]"
+          />
+        </div>
+
+        {/* Services Multi-Select in Pills */}
+        <div>
+          <label className="block text-[10px] font-black text-[#4A4540] uppercase tracking-wider mb-1.5 pl-3">
+            Select Services (Max 3)
+          </label>
+          <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1 scrollbar-thin">
+            {services.map((srv) => {
+              const isSelected = selectedServiceIds.includes(srv._id);
+              return (
+                <div
+                  key={srv._id}
+                  onClick={() => handleToggleService(srv._id)}
+                  className={`p-3 rounded-full border flex items-center justify-between cursor-pointer transition-all px-4 ${
+                    isSelected
+                      ? 'bg-[#1C1A18] text-[#F7F3EE] border-[#1C1A18]'
+                      : 'bg-[#F7F3EE] text-[#1C1A18] border-[#E4DBD0] hover:border-[#C2B4A3]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon
+                      icon={isSelected ? 'solar:check-circle-bold' : 'solar:circle-linear'}
+                      className={`w-4 h-4 ${isSelected ? 'text-[#C2B4A3]' : 'text-[#4A4540]'}`}
+                    />
+                    <span className="font-bold text-xs">{srv.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px]">
+                    <span className={isSelected ? 'text-[#C2B4A3]' : 'text-[#4A4540]'}>
+                      {srv.duration}m
+                    </span>
+                    <span className={`font-black ${isSelected ? 'text-[#F7F3EE]' : 'text-[#1C1A18]'}`}>
+                      ₹{srv.price}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {error && (
-          <div className="mb-4 p-2.5 rounded-xl bg-red-50 text-red-600 text-xs">{error}</div>
-        )}
+        {/* Preferred Stylist */}
+        <CustomDropdown
+          label="Preferred Stylist"
+          options={barberOptions}
+          value={preferredBarberId}
+          onChange={setPreferredBarberId}
+        />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Customer Name</label>
-              <input
-                type="text"
-                required
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Walk-in Client"
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">10-Digit Phone</label>
-              <input
-                type="tel"
-                required
-                maxLength={10}
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                placeholder="9876543210"
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs font-mono focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">
-              Select Services (1 - 3)
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {services.map((s) => {
-                const isSelected = selectedServiceIds.includes(s._id);
-                return (
-                  <button
-                    key={s._id}
-                    type="button"
-                    onClick={() => handleToggleService(s._id)}
-                    className={`p-2.5 rounded-xl border text-left text-xs transition-all cursor-pointer ${
-                      isSelected
-                        ? 'border-purple-600 bg-purple-50 text-purple-900 font-bold'
-                        : 'border-gray-200 hover:border-purple-300 text-gray-700'
-                    }`}
-                  >
-                    <p className="truncate">{s.name}</p>
-                    <p className="text-[10px] text-gray-500 font-normal">₹{s.price} · {s.duration}m</p>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">Preferred Barber</label>
-            <select
-              value={preferredBarberId}
-              onChange={(e) => setPreferredBarberId(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs bg-white focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
-            >
-              <option value="">Any barber (fastest)</option>
-              {barbers.map((b) => (
-                <option key={b._id} value={b._id}>
-                  {b.name} ({b.status})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="pt-2 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-5 py-2 rounded-xl text-xs font-bold bg-purple-700 hover:bg-purple-800 text-white shadow-md cursor-pointer"
-            >
-              {submitting ? 'Adding...' : 'Issue Token'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Submit */}
+        <div className="pt-2">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full py-3.5 rounded-full bg-[#1C1A18] text-[#F7F3EE] font-black text-xs hover:bg-[#4A4540] transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 shadow-md"
+          >
+            {submitting ? (
+              <Icon icon="solar:refresh-bold" className="w-4 h-4 animate-spin" />
+            ) : (
+              <Icon icon="solar:user-plus-bold" className="w-4 h-4 text-[#C2B4A3]" />
+            )}
+            <span>{submitting ? 'Adding Walk-in...' : 'Confirm Walk-in Spot'}</span>
+          </button>
+        </div>
+      </form>
+    </CustomModal>
   );
 }

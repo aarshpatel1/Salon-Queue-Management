@@ -1,61 +1,101 @@
 @import "tailwindcss";
 
+@theme {
+  --color-c1: #F7F3EE;
+  --color-c2: #E4DBD0;
+  --color-c3: #C2B4A3;
+  --color-c4: #4A4540;
+  --color-c5: #1C1A18;
+}
+
+:root {
+  --color-1: #F7F3EE;
+  --color-2: #E4DBD0;
+  --color-3: #C2B4A3;
+  --color-4: #4A4540;
+  --color-5: #1C1A18;
+}
+
 @layer base {
   body {
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--color-1);
+    color: var(--color-5);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    height: 100dvh;
+    width: 100vw;
   }
 }
 
-/* Custom glowing and glass effects matching Branja Barber Studio theme */
-.branja-gradient-bg {
-  background: linear-gradient(135deg, #2a0845 0%, #64158c 50%, #8b2fc9 100%);
+/* iOS 27 Dynamic Island & Pill System Styles (Strictly No Gradients, 60-30-10 Rule) */
+.island-bg-canvas {
+  background-color: #F7F3EE; /* 60% Dominant */
 }
 
-.branja-sidebar-bg {
-  background: linear-gradient(180deg, #1f0733 0%, #2b0b45 100%);
+.island-surface-light {
+  background-color: #FFFFFF;
+  border: 1px solid #E4DBD0;
+  box-shadow: 0 4px 20px -2px rgba(28, 26, 24, 0.04), 0 2px 6px -1px rgba(28, 26, 24, 0.02);
 }
 
-.branja-card-glass {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
+.island-surface-dark {
+  background-color: #1C1A18; /* 30% Secondary structure */
+  color: #F7F3EE;
+  border: 1px solid #4A4540;
+  box-shadow: 0 8px 30px -4px rgba(28, 26, 24, 0.25);
 }
 
-.branja-purple-glow {
-  box-shadow: 0 10px 25px -5px rgba(139, 47, 201, 0.3), 0 8px 10px -6px rgba(139, 47, 201, 0.2);
+.island-surface-muted {
+  background-color: #E4DBD0;
+  border: 1px solid #C2B4A3;
 }
 
-.branja-gold-glow {
-  box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4), 0 8px 10px -6px rgba(245, 158, 11, 0.2);
+.island-pill-card {
+  border-radius: 28px;
+  background-color: #FFFFFF;
+  border: 1px solid #E4DBD0;
+  box-shadow: 0 4px 16px -2px rgba(28, 26, 24, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Pulse animation for called alert */
-@keyframes goldPulse {
+.island-pill-card:hover {
+  border-color: #C2B4A3;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px -4px rgba(28, 26, 24, 0.08);
+}
+
+/* Minimalist Scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #C2B4A3;
+  border-radius: 9999px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: #4A4540;
+}
+
+/* Dynamic Island Pulse Keyframe */
+@keyframes islandPulse {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+    opacity: 1;
   }
   50% {
-    transform: scale(1.02);
-    box-shadow: 0 0 30px 10px rgba(245, 158, 11, 0.4);
+    transform: scale(1.15);
+    opacity: 0.7;
   }
 }
 
-.animate-gold-pulse {
-  animation: goldPulse 2s infinite ease-in-out;
-}
-
-/* TV screen highlight flash */
-@keyframes tvFlash {
-  0% {
-    background-color: rgba(251, 191, 36, 0.9);
-    transform: scale(1.03);
-  }
-  100% {
-    background-color: transparent;
-    transform: scale(1);
-  }
-}
-
-.animate-tv-flash {
-  animation: tvFlash 2.5s ease-out;
+.animate-island-pulse {
+  animation: islandPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

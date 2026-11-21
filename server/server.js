@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import passport from 'passport';
+import os from 'os';
 
 import { connectDB } from './configs/db.js';
 import { configurePassport } from './configs/passport.js';
@@ -77,14 +78,32 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
+function getNetworkIps() {
+  const interfaces = os.networkInterfaces();
+  const addresses = [];
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        addresses.push(iface.address);
+      }
+    }
+  }
+  return addresses;
+}
+
 // Initialize Server & Database
 const startServer = async () => {
   await connectDB();
   await seedDatabase();
 
-  server.listen(PORT, () => {
-    console.log(`🚀 BRANJA Salon Queue Server running on http://localhost:${PORT}`);
-    console.log(`📡 Real-Time Socket.io sync active`);
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`\n🚀 Élan Atelier Salon Queue Server running`);
+    console.log(`   ➜ Local:   http://localhost:${PORT}`);
+    const networkIps = getNetworkIps();
+    networkIps.forEach((ip) => {
+      console.log(`   ➜ Network: http://${ip}:${PORT}`);
+    });
+    console.log(`📡 Real-Time Socket.io sync active (0.0.0.0:${PORT})\n`);
   });
 };
 

@@ -1,24 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
+import { Icon } from '@iconify/react';
 import apiRequest from '../api/apiClient';
 import { useSocket } from '../context/SocketContext';
-import {
-  Scissors,
-  Check,
-  User,
-  Phone,
-  Clock,
-  Sparkles,
-  ArrowRight,
-  AlertCircle,
-  Coffee,
-  CheckCircle2,
-  ChevronLeft
-} from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 export default function JoinQueue() {
   const navigate = useNavigate();
   const { lastSyncTime } = useSocket();
+  const { addToast } = useToast();
 
   // Form State
   const [customerName, setCustomerName] = useState('');
@@ -44,11 +34,10 @@ export default function JoinQueue() {
           apiRequest('/api/queue/summary')
         ]);
 
-        if (servicesRes.success) setServices(servicesRes.services);
-        if (barbersRes.success) setBarbers(barbersRes.barbers);
+        if (servicesRes.success) setServices(servicesRes.services || []);
+        if (barbersRes.success) setBarbers(barbersRes.barbers || []);
         if (summaryRes.success) {
           setSummaryData(summaryRes);
-          // Auto select first service if available
           if (servicesRes.services?.length > 0 && selectedServiceIds.length === 0) {
             setSelectedServiceIds([servicesRes.services[0]._id]);
           }
@@ -74,25 +63,24 @@ export default function JoinQueue() {
         setError('At least 1 service must be selected');
         return;
       }
-      setSelectedServiceIds(prev => prev.filter(sId => sId !== id));
+      setSelectedServiceIds((prev) => prev.filter((sId) => sId !== id));
       setError('');
     } else {
       if (selectedServiceIds.length >= 3) {
         setError('Maximum 3 services can be selected per visit');
         return;
       }
-      setSelectedServiceIds(prev => [...prev, id]);
+      setSelectedServiceIds((prev) => [...prev, id]);
       setError('');
     }
   };
 
-  // Calculations for live summary card
-  const selectedServices = services.filter(s => selectedServiceIds.includes(s._id));
+  // Calculations for summary card
+  const selectedServices = services.filter((s) => selectedServiceIds.includes(s._id));
   const totalMinutes = selectedServices.reduce((sum, s) => sum + s.duration, 0);
   const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
 
-  // Active barbers count for wait calculation
-  const activeBarbersCount = barbers.filter(b => b.isOnDuty && b.status !== 'On break').length;
+  const activeBarbersCount = barbers.filter((b) => b.isOnDuty && b.status !== 'On break').length;
   const queueMinutesAhead = summaryData?.waitStats?.totalMinutesAhead || 0;
   const estimatedWait = activeBarbersCount > 0 ? Math.round(queueMinutesAhead / activeBarbersCount) : 0;
 
@@ -132,8 +120,17 @@ export default function JoinQueue() {
         body: JSON.stringify(payload)
       });
 
-      if (res.success) {
-        // If customer already has an active token, redirects there
+      if (res.success && res.token) {
+        localStorage.setItem('elan_active_token_id', res.token._id);
+        window.dispatchEvent(new Event('elan_token_updated'));
+
+        addToast(
+          res.alreadyActive
+            ? 'Active ticket found. Welcome back!'
+            : `Spot ${res.token.tokenNumber} reserved! Dynamic island activated.`,
+          'success'
+        );
+
         navigate(`/status/${res.token._id}`);
       } else {
         setError(res.message || 'Could not join queue');
@@ -146,299 +143,329 @@ export default function JoinQueue() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f6fc] py-6 px-4 md:px-8">
-      <div className="max-w-xl mx-auto space-y-6">
-        {/* Navigation & Brand Header */}
-        <div className="flex items-center justify-between">
-          <NavLink
-            to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-full transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span>Back to Studio</span>
-          </NavLink>
+    <div className="py-2 px-2 md:px-4 max-w-6xl mx-auto select-none space-y-6">
+      {/* Top Navigation Pill & Status Badge */}
+      <div className="flex items-center justify-between">
+        <NavLink
+          to="/"
+          className="inline-flex items-center gap-2 text-xs font-bold text-[#1C1A18] bg-[#FFFFFF] hover:bg-[#E4DBD0] px-4 py-2 rounded-full transition-all border border-[#E4DBD0] shadow-xs"
+        >
+          <Icon icon="solar:arrow-left-linear" className="w-4 h-4 text-[#4A4540]" />
+          <span>Dashboard</span>
+        </NavLink>
 
-          <span className="text-[11px] font-bold uppercase tracking-wider text-purple-900 bg-purple-100/60 px-2.5 py-1 rounded-full">
-            Mobile Queue Registration
+        <span className="text-[10px] font-black uppercase tracking-widest text-[#1C1A18] bg-[#E4DBD0] px-3.5 py-1.5 rounded-full border border-[#C2B4A3]">
+          Self Check-In Island
+        </span>
+      </div>
+
+      {/* Header Capsule Banner */}
+      <div className="bg-[#FFFFFF] rounded-[32px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-[#1C1A18] text-[#F7F3EE] flex items-center justify-center shrink-0 shadow-md">
+            <Icon icon="solar:scissors-bold" className="w-6 h-6 -rotate-45 text-[#C2B4A3]" />
+          </div>
+          <div>
+            <h1 className="text-xl md:text-2xl font-black text-[#1C1A18] tracking-tight">
+              Join the Queue
+            </h1>
+            <p className="text-xs text-[#4A4540] font-medium mt-0.5">
+              Élan Atelier • Minimalist Dynamic Island Live Queue
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-bold text-[#1C1A18] bg-[#F7F3EE] px-4 py-1.5 rounded-full border border-[#E4DBD0]">
+            ~{estimatedWait}m wait ahead
+          </span>
+          <span className="text-xs font-bold text-[#4A4540] bg-[#F7F3EE] px-4 py-1.5 rounded-full border border-[#E4DBD0]">
+            {activeBarbersCount} Stylists On Duty
           </span>
         </div>
+      </div>
 
-        {/* Studio Card Header */}
-        <div className="bg-gradient-to-r from-purple-800 to-indigo-900 text-white p-6 rounded-3xl shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-purple-500/20 rounded-full blur-2xl pointer-events-none"></div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
-              <Scissors className="w-5 h-5 text-amber-300 -rotate-45" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight">Join the Live Queue</h1>
-              <p className="text-xs text-purple-200">Branja Barber Studio</p>
-            </div>
-          </div>
-          <p className="text-xs text-purple-200/90 mt-2">
-            No physical waiting needed! Get your live token, monitor your position, and walk in right when called.
+      {/* Notice if Online Queue is Closed */}
+      {!isOnlineAllowed && (
+        <div className="p-4 rounded-full bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] flex items-center gap-3 px-6 shadow-md">
+          <Icon icon="solar:danger-triangle-bold" className="w-5 h-5 text-[#C2B4A3] shrink-0" />
+          <p className="text-xs font-semibold">
+            {joiningNotice || 'Online queue entry is closed. Walk-ins are accepted at reception.'}
           </p>
         </div>
+      )}
 
-        {/* Queue Closed / Cutoff Warning */}
-        {!isOnlineAllowed && (
-          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-3 shadow-sm">
-            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              <h4 className="font-bold text-sm">Online Joining Closed</h4>
-              <p className="text-xs text-amber-800 mt-0.5">
-                {joiningNotice || 'Online queue closes at 8:30 PM (30 minutes before salon closes at 9:00 PM).'}
-              </p>
-              <p className="text-[11px] text-amber-700 mt-1 font-medium">
-                Walk-ins are still accepted directly at the reception tablet.
-              </p>
+      {/* Responsive Layout for Laptop/Desktop (2-Column Grid) and Mobile (Stacked) */}
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">
+        {/* Left Column (Form Inputs: Steps 1, 2, 3) */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* Step 1: Customer Information in Pill Card */}
+          <div className="bg-[#FFFFFF] rounded-[32px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-4">
+            <div className="flex items-center gap-2.5 border-b border-[#E4DBD0] pb-3">
+              <span className="w-6 h-6 rounded-full bg-[#1C1A18] text-[#F7F3EE] text-[11px] font-black flex items-center justify-center">
+                1
+              </span>
+              <h2 className="text-xs font-black uppercase tracking-wider text-[#1C1A18]">
+                Your Information
+              </h2>
             </div>
-          </div>
-        )}
 
-        {/* Error Alert */}
-        {error && (
-          <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Section 1: Customer Details */}
-          <div className="bg-white p-5 rounded-3xl border border-purple-100 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <User className="w-4 h-4 text-purple-600" />
-              <span>Your Details</span>
-            </h3>
-
-            <div className="space-y-3">
+            <div className="space-y-3.5 pt-1">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-[11px] font-bold text-[#4A4540] uppercase tracking-wider mb-1.5 pl-3">
                   Full Name *
                 </label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />
-                  <input
-                    type="text"
-                    required
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="e.g. Karan Mehta"
-                    disabled={!isOnlineAllowed}
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 rounded-xl text-sm border border-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 transition-all"
-                  />
-                </div>
+                <input
+                  type="text"
+                  required
+                  disabled={!isOnlineAllowed || submitting}
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="e.g. Aryan Shah"
+                  className="w-full px-5 py-3 bg-[#F7F3EE] border border-[#E4DBD0] rounded-full text-xs font-medium text-[#1C1A18] placeholder-[#4A4540]/50 focus:outline-none focus:border-[#1C1A18] focus:bg-white transition-all shadow-inner"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  10-Digit Mobile Number *
+                <label className="block text-[11px] font-bold text-[#4A4540] uppercase tracking-wider mb-1.5 pl-3">
+                  Mobile Number (10 digits) *
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-2.5 text-xs font-bold text-gray-500">
-                    +91
-                  </span>
-                  <input
-                    type="tel"
-                    required
-                    maxLength={10}
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                    placeholder="9876543210"
-                    disabled={!isOnlineAllowed}
-                    className="w-full pl-12 pr-4 py-2.5 bg-gray-50/50 rounded-xl text-sm border border-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 font-mono transition-all"
-                  />
-                </div>
-                <p className="text-[10px] text-gray-400 mt-1">
-                  Used exclusively to look up your active spot and send real-time alerts.
+                <input
+                  type="tel"
+                  required
+                  disabled={!isOnlineAllowed || submitting}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="e.g. 9876543210"
+                  className="w-full px-5 py-3 bg-[#F7F3EE] border border-[#E4DBD0] rounded-full text-xs font-medium text-[#1C1A18] placeholder-[#4A4540]/50 focus:outline-none focus:border-[#1C1A18] focus:bg-white transition-all shadow-inner"
+                />
+                <p className="text-[10px] text-[#4A4540] mt-1 pl-3 font-medium">
+                  One spot per phone number. Used to restore your active ticket.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Section 2: Active Services Selection (Min 1, Max 3) */}
-          <div className="bg-white p-5 rounded-3xl border border-purple-100 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <Scissors className="w-4 h-4 text-purple-600 -rotate-45" />
-                <span>Select Services</span>
-              </h3>
-              <span className="text-[11px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">
-                {selectedServiceIds.length}/3 Selected
+          {/* Step 2: Select Services in Pill Card */}
+          <div className="bg-[#FFFFFF] rounded-[32px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-3">
+              <div className="flex items-center gap-2.5">
+                <span className="w-6 h-6 rounded-full bg-[#1C1A18] text-[#F7F3EE] text-[11px] font-black flex items-center justify-center">
+                  2
+                </span>
+                <h2 className="text-xs font-black uppercase tracking-wider text-[#1C1A18]">
+                  Select Services (Max 3)
+                </h2>
+              </div>
+              <span className="text-[10px] font-bold bg-[#E4DBD0] text-[#1C1A18] px-3 py-1 rounded-full border border-[#C2B4A3]">
+                {selectedServiceIds.length} / 3 Selected
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
               {services.map((service) => {
                 const isSelected = selectedServiceIds.includes(service._id);
                 return (
-                  <button
+                  <div
                     key={service._id}
-                    type="button"
-                    disabled={!isOnlineAllowed}
-                    onClick={() => handleToggleService(service._id)}
-                    className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                    onClick={() => isOnlineAllowed && handleToggleService(service._id)}
+                    className={`p-4 rounded-[24px] border flex items-center justify-between cursor-pointer transition-all ${
                       isSelected
-                        ? 'border-purple-600 bg-purple-50/70 shadow-sm ring-1 ring-purple-600'
-                        : 'border-gray-200 hover:border-purple-300 bg-white'
+                        ? 'bg-[#1C1A18] text-[#F7F3EE] border-[#1C1A18] shadow-md transform -translate-y-0.5'
+                        : 'bg-[#F7F3EE] text-[#1C1A18] border-[#E4DBD0] hover:border-[#C2B4A3]'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-xs text-gray-900">{service.name}</span>
+                    <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                          isSelected ? 'bg-purple-600 text-white' : 'border border-gray-300'
+                        className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border ${
+                          isSelected
+                            ? 'bg-[#F7F3EE] border-[#F7F3EE] text-[#1C1A18]'
+                            : 'border-[#C2B4A3] bg-white'
                         }`}
                       >
-                        {isSelected && <Check className="w-3 h-3" />}
+                        {isSelected && <Icon icon="solar:check-circle-bold" className="w-4 h-4" />}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-xs truncate">{service.name}</p>
+                        <p className={`text-[10px] ${isSelected ? 'text-[#C2B4A3]' : 'text-[#4A4540]'}`}>
+                          {service.duration} mins • {service.category}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between text-xs mt-2 text-gray-500">
-                      <span className="flex items-center gap-1 font-medium">
-                        <Clock className="w-3 h-3 text-purple-600" />
-                        {service.duration} min
-                      </span>
-                      <span className="font-bold text-gray-900">₹{service.price}</span>
-                    </div>
-                  </button>
+                    <span className={`text-xs font-black shrink-0 ml-2 ${isSelected ? 'text-[#F7F3EE]' : 'text-[#1C1A18]'}`}>
+                      ₹{service.price}
+                    </span>
+                  </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Section 3: Barber Selector */}
-          <div className="bg-white p-5 rounded-3xl border border-purple-100 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-600" />
-              <span>Choose Stylist</span>
-            </h3>
+          {/* Step 3: Preferred Stylist in Pill Card */}
+          <div className="bg-[#FFFFFF] rounded-[32px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-4">
+            <div className="flex items-center gap-2.5 border-b border-[#E4DBD0] pb-3">
+              <span className="w-6 h-6 rounded-full bg-[#1C1A18] text-[#F7F3EE] text-[11px] font-black flex items-center justify-center">
+                3
+              </span>
+              <h2 className="text-xs font-black uppercase tracking-wider text-[#1C1A18]">
+                Stylist Preference
+              </h2>
+            </div>
 
-            <div className="space-y-2">
-              {/* Option 1: Any Barber (Fastest) */}
-              <label
-                className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
-                  preferredBarberId === ''
-                    ? 'border-purple-600 bg-purple-50/70 ring-1 ring-purple-600'
-                    : 'border-gray-200 hover:border-purple-200 bg-white'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
-                    ⚡
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-gray-900">Any barber (fastest)</p>
-                    <p className="text-[11px] text-gray-500">
-                      Assigned to the first available stylist
-                    </p>
-                  </div>
+            {/* Any Stylist Option Pill */}
+            <label
+              className={`p-4 rounded-full border flex items-center justify-between cursor-pointer transition-all ${
+                preferredBarberId === ''
+                  ? 'border-[#1C1A18] bg-[#1C1A18] text-[#F7F3EE] shadow-md'
+                  : 'border-[#E4DBD0] hover:border-[#C2B4A3] bg-[#F7F3EE]'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#F7F3EE] text-[#1C1A18] flex items-center justify-center font-bold text-xs">
+                  <Icon icon="solar:bolt-bold" className="w-4 h-4 text-[#1C1A18]" />
                 </div>
-                <input
-                  type="radio"
-                  name="barber"
-                  value=""
-                  checked={preferredBarberId === ''}
-                  onChange={() => setPreferredBarberId('')}
-                  className="accent-purple-600 w-4 h-4"
-                />
-              </label>
-
-              {/* Individual Barber Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                {barbers.map((barber) => {
-                  const isOnBreak = barber.status === 'On break';
-                  const isSelected = preferredBarberId === barber._id;
-
-                  return (
-                    <label
-                      key={barber._id}
-                      className={`p-3 rounded-2xl border flex items-center justify-between transition-all cursor-pointer ${
-                        isSelected
-                          ? 'border-purple-600 bg-purple-50/70 ring-1 ring-purple-600'
-                          : isOnBreak
-                          ? 'border-amber-200 bg-amber-50/30'
-                          : 'border-gray-200 hover:border-purple-200 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <img
-                          src={barber.avatar}
-                          alt={barber.name}
-                          className="w-9 h-9 rounded-full object-cover shrink-0"
-                        />
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold text-gray-900 truncate">
-                            {barber.name}
-                          </p>
-                          {isOnBreak ? (
-                            <span className="text-[10px] text-amber-700 font-medium flex items-center gap-1">
-                              <Coffee className="w-3 h-3" />
-                              {barber.name} is on break
-                            </span>
-                          ) : (
-                            <span className="text-[10px] text-emerald-600 font-medium">
-                              ● {barber.status}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <input
-                        type="radio"
-                        name="barber"
-                        value={barber._id}
-                        checked={isSelected}
-                        onChange={() => setPreferredBarberId(barber._id)}
-                        className="accent-purple-600 w-4 h-4 shrink-0 ml-2"
-                      />
-                    </label>
-                  );
-                })}
+                <div>
+                  <p className="text-xs font-bold">Any Available Stylist (Fastest)</p>
+                  <p className={`text-[10px] ${preferredBarberId === '' ? 'text-[#C2B4A3]' : 'text-[#4A4540]'}`}>
+                    Earliest opening chair takes your ticket
+                  </p>
+                </div>
               </div>
+              <input
+                type="radio"
+                name="barber"
+                value=""
+                checked={preferredBarberId === ''}
+                onChange={() => setPreferredBarberId('')}
+                className="accent-[#1C1A18] w-4 h-4 mr-2"
+              />
+            </label>
+
+            {/* Individual Stylists Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+              {barbers.map((barber) => {
+                const isOnBreak = barber.status === 'On break';
+                const isSelected = preferredBarberId === barber._id;
+
+                return (
+                  <label
+                    key={barber._id}
+                    className={`p-3 rounded-full border flex items-center justify-between cursor-pointer transition-all ${
+                      isSelected
+                        ? 'border-[#1C1A18] bg-[#1C1A18] text-[#F7F3EE] shadow-md'
+                        : 'border-[#E4DBD0] hover:border-[#C2B4A3] bg-[#F7F3EE]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 ml-1">
+                      <img
+                        src={barber.avatar}
+                        alt={barber.name}
+                        className="w-8 h-8 rounded-full object-cover border border-[#C2B4A3] shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold truncate">{barber.name}</p>
+                        <span
+                          className={`text-[9px] font-semibold ${
+                            isSelected
+                              ? 'text-[#C2B4A3]'
+                              : isOnBreak
+                              ? 'text-[#4A4540]'
+                              : 'text-[#1C1A18]'
+                          }`}
+                        >
+                          {barber.status}
+                        </span>
+                      </div>
+                    </div>
+                    <input
+                      type="radio"
+                      name="barber"
+                      value={barber._id}
+                      checked={isSelected}
+                      onChange={() => setPreferredBarberId(barber._id)}
+                      className="accent-[#1C1A18] w-4 h-4 shrink-0 mr-2"
+                    />
+                  </label>
+                );
+              })}
             </div>
           </div>
+        </div>
 
-          {/* Section 4: Live Summary Card */}
-          <div className="bg-gradient-to-br from-purple-900 to-indigo-950 text-white p-5 rounded-3xl shadow-xl space-y-4">
-            <h4 className="text-xs uppercase font-bold tracking-wider text-purple-300">
-              Live Queue Estimate
-            </h4>
+        {/* Right Column (Sticky Floating Dynamic Island Summary on Laptop Screen) */}
+        <div className="lg:col-span-5 lg:sticky lg:top-4 space-y-4">
+          <div className="bg-[#1C1A18] text-[#F7F3EE] rounded-[36px] p-6 md:p-7 border border-[#4A4540] shadow-2xl space-y-5">
+            {/* Header Badge */}
+            <div className="flex items-center justify-between border-b border-[#4A4540]/50 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e] animate-pulse" />
+                <h3 className="text-xs font-black uppercase tracking-wider text-[#F7F3EE]">
+                  Live Ticket Preview
+                </h3>
+              </div>
+              <span className="text-[10px] bg-[#4A4540] text-[#E4DBD0] px-3 py-1 rounded-full font-bold">
+                Smart Island
+              </span>
+            </div>
 
-            <div className="grid grid-cols-3 gap-2 py-2 border-y border-white/10 text-center">
-              <div>
-                <p className="text-xl font-bold">{totalMinutes}m</p>
-                <p className="text-[10px] text-purple-200">Service Duration</p>
+            {/* Ticket Preview Details in Pill Container */}
+            <div className="p-4 rounded-[28px] bg-[#4A4540]/30 border border-[#4A4540]/60 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#C2B4A3]">Guest Name</span>
+                <span className="font-bold text-[#F7F3EE]">{customerName.trim() || '—'}</span>
               </div>
-              <div>
-                <p className="text-xl font-bold text-amber-300">₹{totalPrice}</p>
-                <p className="text-[10px] text-purple-200">Total Price</p>
+
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#C2B4A3]">Services Selected</span>
+                <span className="font-bold text-[#F7F3EE] text-right max-w-[160px] truncate">
+                  {selectedServices.map((s) => s.name).join(', ') || 'None'}
+                </span>
               </div>
-              <div>
-                <p className="text-xl font-bold text-emerald-300">~{estimatedWait}m</p>
-                <p className="text-[10px] text-purple-200">Est. Wait</p>
+
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#C2B4A3]">Total Duration</span>
+                <span className="font-bold text-[#F7F3EE]">{totalMinutes} mins</span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#C2B4A3]">Estimated Wait</span>
+                <span className="font-bold text-[#E4DBD0]">~{estimatedWait} mins ahead</span>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-[#4A4540]/40 text-sm font-black">
+                <span className="text-[#C2B4A3]">Total Payable</span>
+                <span className="text-base text-[#F7F3EE]">₹{totalPrice}</span>
               </div>
             </div>
 
-            {/* Confirm Button */}
+            {/* Error Message */}
+            {error && (
+              <div className="p-3.5 rounded-full bg-[#ef4444]/20 border border-[#ef4444]/40 text-[#ef4444] text-xs font-bold flex items-center gap-2 px-5">
+                <Icon icon="solar:danger-triangle-bold" className="w-4 h-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Big Action Pill Button */}
             <button
               type="submit"
-              disabled={submitting || !isOnlineAllowed}
-              className="w-full py-3.5 px-6 rounded-2xl font-bold text-sm text-gray-950 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-amber-200 shadow-xl shadow-amber-400/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
+              disabled={!isOnlineAllowed || submitting}
+              className="w-full py-4 rounded-full bg-[#F7F3EE] hover:bg-[#E4DBD0] text-[#1C1A18] font-black text-xs uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer shadow-lg transform hover:-translate-y-0.5 active:scale-98"
             >
               {submitting ? (
-                <span>Confirming Spot...</span>
+                <Icon icon="solar:refresh-bold" className="w-5 h-5 animate-spin" />
               ) : (
-                <>
-                  <span>Confirm & Join Queue</span>
-                  <ArrowRight className="w-4 h-4 text-gray-950" />
-                </>
+                <Icon icon="solar:ticket-bold" className="w-5 h-5 text-[#1C1A18]" />
               )}
+              <span>{submitting ? 'Confirming Spot...' : 'Confirm & Enter Island Queue'}</span>
             </button>
+
+            <p className="text-[10px] text-[#C2B4A3] text-center leading-relaxed">
+              Once submitted, your floating dynamic island will monitor your wait time in real-time.
+            </p>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 }

@@ -1,129 +1,121 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  Calendar,
-  Tv,
-  Scissors,
-  Users,
-  Settings,
-  Sparkles,
-  UserPlus,
-  Lock,
-  Unlock
-} from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Sidebar() {
   const { isAuthenticated, logoutStaff, openPinModal } = useAuth();
 
   const navLinks = [
-    { to: '/', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-    { to: '/join', label: 'Join Queue', icon: UserPlus },
-    { to: '/reception', label: 'Reception', icon: Calendar, badge: 'Staff' },
-    { to: '/display', label: 'Waiting TV', icon: Tv, badge: 'Public' },
-    { to: '/barber/Dudu%20Tassa', label: 'Barber View', icon: Users, badge: 'Staff' },
-    { to: '/admin', label: 'Settings', icon: Settings, badge: 'Staff' }
+    { to: '/', label: 'Dashboard', icon: 'solar:widget-2-bold', exact: true },
+    { to: '/join', label: 'Join Queue', icon: 'solar:user-plus-bold' },
+    { to: '/reception', label: 'Reception Tablet', icon: 'solar:calendar-bold', badge: 'Staff' },
+    { to: '/display', label: 'Lounge TV Display', icon: 'solar:tv-bold', badge: 'Display' },
+    { to: '/barber/Aarav%20Patel', label: 'Stylist Chair', icon: 'solar:scissors-bold', badge: 'Staff' },
+    { to: '/admin', label: 'Studio Settings', icon: 'solar:settings-bold', badge: 'Owner' }
   ];
 
   return (
-    <aside className="w-64 shrink-0 min-h-screen bg-[#1c052f] text-white flex flex-col justify-between p-5 border-r border-purple-950/60 select-none hidden md:flex">
-      <div>
-        {/* Brand Header */}
-        <div className="flex items-center gap-3 px-2 py-4 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-purple-900/50">
-            <Scissors className="w-5 h-5 text-white -rotate-45" />
-          </div>
-          <div>
-            <h1 className="font-bold text-lg tracking-wider text-white">BRANJA</h1>
-            <p className="text-[11px] text-purple-300 tracking-widest uppercase">Barber Studio</p>
-          </div>
+    <aside className="w-64 shrink-0 my-3 ml-3 md:my-4 md:ml-4 h-[calc(100dvh-1.5rem)] md:h-[calc(100dvh-2rem)] max-h-[calc(100dvh-1.5rem)] md:max-h-[calc(100dvh-2rem)] rounded-[36px] bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] p-5 shadow-2xl flex flex-col justify-between select-none hidden md:flex overflow-hidden">
+      {/* Top Brand Header Pill (Static shrink-0) */}
+      <div className="shrink-0 mb-4 px-3 py-3 rounded-full bg-[#4A4540]/30 border border-[#4A4540]/50 flex items-center gap-3">
+        <div className="w-9 h-9 rounded-full bg-[#F7F3EE] flex items-center justify-center shrink-0">
+          <Icon icon="solar:scissors-bold" className="w-4 h-4 text-[#1C1A18] -rotate-45" />
         </div>
+        <div className="min-w-0">
+          <h1 className="font-black text-sm tracking-widest text-[#F7F3EE] uppercase truncate">ÉLAN ATELIER</h1>
+          <p className="text-[9px] text-[#C2B4A3] tracking-widest uppercase font-semibold">Dynamic Island</p>
+        </div>
+      </div>
 
-        {/* Navigation Items */}
+      {/* Navigation Tabs (Scrollable flex-1 overflow-y-auto inside 100% dvh) */}
+      <div className="flex-1 overflow-y-auto min-h-0 pr-1 space-y-1.5 scrollbar-thin">
         <nav className="space-y-1.5">
-          {navLinks.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-medium transition-all ${
-                    isActive
-                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-700/40 font-semibold'
-                      : 'text-purple-200/80 hover:bg-white/10 hover:text-white'
-                  }`
-                }
-              >
-                <div className="flex items-center gap-3">
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.label}</span>
-                </div>
-                {item.badge && (
-                  <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-normal ${
-                      item.badge === 'Staff'
-                        ? 'bg-purple-900/80 text-purple-200 border border-purple-700/50'
-                        : 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/50'
-                    }`}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-              </NavLink>
-            );
-          })}
+          {navLinks.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `flex items-center justify-between px-4 py-3 rounded-full text-xs font-bold transition-all ${
+                  isActive
+                    ? 'bg-[#F7F3EE] text-[#1C1A18] shadow-md border border-[#C2B4A3]'
+                    : 'text-[#E4DBD0]/80 hover:bg-[#4A4540]/40 hover:text-[#F7F3EE]'
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Icon
+                      icon={item.icon}
+                      className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#1C1A18]' : 'text-[#C2B4A3]'}`}
+                    />
+                    <span className="truncate">{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span
+                      className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shrink-0 ${
+                        isActive
+                          ? 'bg-[#1C1A18] text-[#F7F3EE]'
+                          : 'bg-[#4A4540] text-[#E4DBD0] border border-[#C2B4A3]/30'
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </>
+              )}
+            </NavLink>
+          ))}
         </nav>
       </div>
 
-      {/* Bottom Promo & Auth Card */}
-      <div className="space-y-4">
-        {/* Staff Authentication Status */}
-        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            {isAuthenticated ? (
-              <Unlock className="w-4 h-4 text-emerald-400" />
-            ) : (
-              <Lock className="w-4 h-4 text-amber-400" />
-            )}
-            <span className="text-gray-300">
+      {/* Static Footer Inside 100% dvh (Pinned at bottom, shrink-0) */}
+      <div className="shrink-0 pt-4 mt-auto space-y-3 border-t border-[#4A4540]/40 bg-[#1C1A18]">
+        {/* Staff Authentication Status Pill */}
+        <div className="p-3 rounded-full bg-[#4A4540]/30 border border-[#4A4540]/60 flex items-center justify-between text-xs px-4">
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className={`w-2 h-2 rounded-full shrink-0 ${
+                isAuthenticated ? 'bg-[#22c55e]' : 'bg-[#C2B4A3]'
+              }`}
+            />
+            <span className="text-[#E4DBD0] text-[11px] font-semibold truncate">
               {isAuthenticated ? 'Staff Mode Active' : 'Staff Locked'}
             </span>
           </div>
           {isAuthenticated ? (
             <button
               onClick={logoutStaff}
-              className="text-purple-300 hover:text-white text-[11px] underline cursor-pointer"
+              className="text-[#C2B4A3] hover:text-[#F7F3EE] text-[11px] font-bold underline cursor-pointer shrink-0 ml-1"
             >
               Lock
             </button>
           ) : (
             <button
               onClick={() => openPinModal()}
-              className="text-amber-300 hover:text-amber-100 font-semibold text-[11px] underline cursor-pointer"
+              className="text-[#F7F3EE] hover:text-[#C2B4A3] font-bold text-[11px] underline cursor-pointer shrink-0 ml-1"
             >
-              Enter PIN
+              PIN
             </button>
           )}
         </div>
 
-        {/* Growth Banner (Matching Demo Image) */}
-        <div className="p-4 rounded-3xl bg-gradient-to-br from-purple-800/80 to-indigo-900/80 border border-purple-500/30 text-white shadow-xl relative overflow-hidden">
-          <div className="absolute top-2 right-2 w-16 h-16 bg-purple-400/10 rounded-full blur-xl pointer-events-none"></div>
-          <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center mb-2.5">
-            <Sparkles className="w-4 h-4 text-amber-300" />
+        {/* Minimalist Floating Pill Quick Action Card */}
+        <div className="p-4 rounded-[28px] bg-[#4A4540]/30 border border-[#4A4540]/50 text-[#F7F3EE] space-y-2 text-center">
+          <div className="w-8 h-8 rounded-full bg-[#1C1A18] text-[#C2B4A3] flex items-center justify-center mx-auto border border-[#4A4540]">
+            <Icon icon="solar:ticket-bold" className="w-4 h-4" />
           </div>
-          <h3 className="font-bold text-xs tracking-wide">Grow Your Barber Business</h3>
-          <p className="text-[11px] text-purple-200/80 mt-1 leading-snug">
-            Manage bookings, queue tokens, and your team effortlessly.
+          <h4 className="font-bold text-xs text-[#F7F3EE]">Live Queue Spot</h4>
+          <p className="text-[10px] text-[#C2B4A3] leading-relaxed">
+            Real-time dynamic island synchronization for lounge guests and stylists.
           </p>
-          <div className="mt-3">
+          <div className="pt-1">
             <NavLink
-              to="/admin"
-              className="inline-flex items-center gap-1.5 text-[11px] font-semibold bg-white text-purple-950 px-3 py-1.5 rounded-xl shadow hover:bg-purple-50 transition-colors"
+              to="/join"
+              className="inline-block w-full text-center py-2 rounded-full text-xs font-black bg-[#F7F3EE] text-[#1C1A18] hover:bg-[#E4DBD0] transition-colors shadow-xs"
             >
-              Manage Studio →
+              Join Queue →
             </NavLink>
           </div>
         </div>

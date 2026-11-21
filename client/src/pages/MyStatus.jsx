@@ -1,41 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, NavLink } from 'react-router-dom';
+import { Icon } from '@iconify/react';
 import apiRequest from '../api/apiClient';
 import { useSocket } from '../context/SocketContext';
 import { playChime, triggerVibration } from '../utils/audioChime';
-import {
-  Scissors,
-  Clock,
-  User,
-  Phone,
-  AlertTriangle,
-  Sparkles,
-  ChevronLeft,
-  XCircle,
-  MapPin,
-  CheckCircle2,
-  Bell
-} from 'lucide-react';
 import confetti from 'canvas-confetti';
+import RealTimeTimeline from '../components/RealTimeTimeline';
 
 export default function MyStatus() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { lastSyncTime, lastCalledAlert } = useSocket();
+  const { lastSyncTime } = useSocket();
 
   const [tokenData, setTokenData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
   const [hasCelebrated, setHasCelebrated] = useState(false);
 
   const fetchStatus = async () => {
     try {
       const res = await apiRequest(`/api/queue/status/${id}`);
-      if (res.success) {
+      if (res.success && res.token) {
         setTokenData(res);
-        // If status transitioned to Called, trigger vibration & chime
+        localStorage.setItem('elan_active_token_id', res.token._id);
+        window.dispatchEvent(new Event('elan_token_updated'));
+
         if (res.token.status === 'Called' && !hasCelebrated) {
           playChime();
           triggerVibration([400, 200, 400]);
@@ -64,304 +53,191 @@ export default function MyStatus() {
   const isCalled = token?.status === 'Called';
   const isInChair = token?.status === 'In chair';
   const isDone = token?.status === 'Done';
-  const isCancelled = token?.status === 'Cancelled';
-  const isNoShow = token?.status === 'No-show';
 
-  // Format position string (1st, 2nd, 3rd, 4th...)
   const formatOrdinal = (n) => {
     const s = ['th', 'st', 'nd', 'rd'];
     const v = n % 100;
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   };
 
-  // Handle Cancel Spot
-  const handleCancelSpot = async () => {
-    setCancelling(true);
-    try {
-      const res = await apiRequest(`/api/queue/cancel/${token._id}`, {
-        method: 'POST'
-      });
-      if (res.success) {
-        setCancelModalOpen(false);
-        fetchStatus();
-      }
-    } catch (err) {
-      alert(err.message || 'Failed to cancel spot');
-    } finally {
-      setCancelling(false);
-    }
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8f6fc] flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-12 h-12 rounded-full border-4 border-purple-200 border-t-purple-700 animate-spin mb-4"></div>
-        <p className="text-sm font-semibold text-gray-600">Retrieving live token status...</p>
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center select-none">
+        <Icon icon="solar:refresh-bold" className="w-8 h-8 text-[#1C1A18] animate-spin mb-3" />
+        <p className="text-xs font-bold text-[#1C1A18]">Connecting to Live Dynamic Island...</p>
       </div>
     );
   }
 
   if (error || !token) {
     return (
-      <div className="min-h-screen bg-[#f8f6fc] flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mb-4">
-          <AlertTriangle className="w-8 h-8" />
-        </div>
-        <h2 className="text-lg font-bold text-gray-900 mb-2">Token Not Found</h2>
-        <p className="text-sm text-gray-500 max-w-xs mb-6">
-          {error || 'We could not locate this queue token. It may have expired or been removed.'}
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center select-none">
+        <Icon icon="solar:danger-triangle-bold" className="w-10 h-10 text-[#ef4444] mb-2" />
+        <h2 className="text-lg font-black text-[#1C1A18] mb-1">Spot Not Found</h2>
+        <p className="text-xs text-[#4A4540] max-w-xs mb-4">
+          {error || 'This ticket may have been concluded or cancelled.'}
         </p>
         <NavLink
           to="/join"
-          className="px-6 py-2.5 rounded-full font-bold text-xs text-white bg-purple-700 hover:bg-purple-800 transition-all"
+          className="px-6 py-2.5 rounded-full bg-[#1C1A18] text-[#F7F3EE] font-bold text-xs"
         >
-          Join Queue Again
+          Join Live Queue
         </NavLink>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f6fc] py-6 px-4 md:px-8">
-      {/* Full-screen Gold Called Alert Overlay when token is Called */}
+    <div className="space-y-5 max-w-lg mx-auto select-none py-1">
+      {/* Top Navigation Pill */}
+      <div className="flex items-center justify-between">
+        <NavLink
+          to="/"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1C1A18] bg-[#FFFFFF] px-4 py-2 rounded-full border border-[#E4DBD0] shadow-xs"
+        >
+          <Icon icon="solar:arrow-left-linear" className="w-4 h-4 text-[#4A4540]" />
+          <span>Dashboard</span>
+        </NavLink>
+
+        <span className="text-[10px] font-black uppercase tracking-wider text-[#1C1A18] bg-[#E4DBD0] px-3.5 py-1.5 rounded-full border border-[#C2B4A3]">
+          Live Ticket
+        </span>
+      </div>
+
+      {/* 2nd in Line Warning Capsule Banner */}
+      {isSecondInLine && (
+        <div className="p-4 rounded-full bg-[#E4DBD0] text-[#1C1A18] border border-[#C2B4A3] shadow-xs flex items-center gap-3 px-5">
+          <Icon icon="solar:bell-bold" className="w-5 h-5 shrink-0 text-[#1C1A18]" />
+          <div className="text-xs">
+            <p className="font-black uppercase tracking-wide">You're 2nd in line!</p>
+            <p className="text-[#4A4540] text-[11px] mt-0.5">
+              Please make your way toward the salon lounge.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* CALLED TO CHAIR ALERT PILL BANNER */}
       {isCalled && (
-        <div className="fixed inset-0 z-50 bg-gradient-to-br from-amber-500 via-yellow-400 to-amber-600 flex flex-col items-center justify-center p-6 text-center text-gray-950 animate-in fade-in duration-300">
-          <div className="w-24 h-24 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center mb-6 animate-bounce shadow-2xl">
-            <Sparkles className="w-12 h-12 text-purple-950" />
+        <div className="p-5 rounded-[32px] bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] shadow-xl flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-[#F7F3EE] text-[#1C1A18] flex items-center justify-center shrink-0">
+            <Icon icon="solar:scissors-bold" className="w-6 h-6 text-[#1C1A18]" />
           </div>
+          <div>
+            <span className="text-[10px] uppercase font-black tracking-widest bg-[#4A4540] text-[#E4DBD0] px-3 py-0.5 rounded-full">
+              Chair Ready
+            </span>
+            <h2 className="text-lg font-black mt-1">Please Proceed to Chair!</h2>
+            <p className="text-xs text-[#E4DBD0]">
+              Stylist: <span className="font-bold text-[#F7F3EE]">{token.assignedBarberName || 'Your Stylist'}</span>
+            </p>
+          </div>
+        </div>
+      )}
 
-          <span className="text-xs font-black tracking-widest uppercase bg-purple-950 text-amber-300 px-4 py-1.5 rounded-full shadow-lg mb-4">
-            It's Your Turn Now!
-          </span>
-
-          <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2">
-            Token {token.tokenNumber}
-          </h1>
-
-          <div className="bg-white/90 backdrop-blur-md p-6 rounded-3xl max-w-sm w-full my-4 shadow-2xl border border-amber-300">
-            <p className="text-sm font-semibold text-gray-600">Please proceed directly to:</p>
-            <h2 className="text-2xl font-black text-purple-950 my-1">
-              {token.assignedBarberName || 'Main Styling Station'}
-            </h2>
-            <div className="text-xs text-gray-700 mt-2 flex items-center justify-center gap-1 font-medium">
-              <MapPin className="w-4 h-4 text-purple-700" />
-              <span>Chair 1 - Branja Barber Studio</span>
+      {/* IN CHAIR REAL-TIME TIMELINE BANNER */}
+      {isInChair && (
+        <div className="p-6 rounded-[32px] bg-[#FFFFFF] border border-[#1C1A18] shadow-md space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e] animate-pulse"></span>
+              <span className="text-xs font-black text-[#1C1A18] uppercase tracking-wider">
+                Session Active in Chair
+              </span>
             </div>
+            <span className="text-xs font-bold text-[#4A4540]">
+              Stylist: {token.assignedBarberName || 'Stylist'}
+            </span>
           </div>
 
-          <p className="text-xs text-purple-950/80 font-medium max-w-xs mt-2">
-            Your stylist is waiting for you at the station. Have a seat and enjoy your fresh look!
+          {/* REAL-TIME LIVE TIMELINE */}
+          <RealTimeTimeline
+            startedAt={token.startedAt || new Date()}
+            estimatedDuration={token.totalDuration || 30}
+            status="In chair"
+            compact={false}
+          />
+        </div>
+      )}
+
+      {/* COMPLETED BANNER */}
+      {isDone && (
+        <div className="p-6 rounded-[32px] bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] text-center space-y-2">
+          <Icon icon="solar:check-circle-bold" className="w-10 h-10 text-[#C2B4A3] mx-auto" />
+          <h3 className="text-base font-bold">Session Completed</h3>
+          <p className="text-xs text-[#E4DBD0]">
+            Thank you for visiting Élan Atelier. See you on your next visit!
           </p>
         </div>
       )}
 
-      <div className="max-w-md mx-auto space-y-6">
-        {/* Top Header */}
-        <div className="flex items-center justify-between">
-          <NavLink
-            to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-full transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span>Studio Home</span>
-          </NavLink>
-
-          <span className="text-[11px] font-bold text-purple-900 bg-purple-100/60 px-2.5 py-1 rounded-full">
-            Live Queue Tracker
-          </span>
+      {/* Main Digital Ticket Capsule Card */}
+      <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-5">
+        <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-4">
+          <div>
+            <span className="text-[10px] uppercase font-bold tracking-widest text-[#4A4540]">
+              Ticket Number
+            </span>
+            <p className="text-3xl font-black text-[#1C1A18]">{token.tokenNumber}</p>
+          </div>
+          <div className="text-right">
+            <span className="text-[10px] uppercase font-bold tracking-widest text-[#4A4540]">
+              Customer
+            </span>
+            <p className="text-base font-black text-[#1C1A18]">{token.customerName}</p>
+          </div>
         </div>
 
-        {/* 2nd in line Alert: "Start coming to the salon" */}
-        {isSecondInLine && (
-          <div className="p-4 rounded-3xl bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-950 shadow-lg flex items-center gap-3 animate-pulse">
-            <div className="w-10 h-10 rounded-2xl bg-black/10 flex items-center justify-center shrink-0">
-              <Bell className="w-5 h-5 text-gray-950" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm leading-tight">Start Coming to the Salon!</h4>
-              <p className="text-xs font-medium text-gray-900/90 mt-0.5">
-                You are 2nd in line. Your turn is coming up very shortly!
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Status Completed / Cancelled / In Chair Badges */}
-        {isInChair && (
-          <div className="p-4 rounded-3xl bg-purple-600 text-white shadow-lg flex items-center gap-3">
-            <Scissors className="w-6 h-6 -rotate-45" />
-            <div>
-              <h4 className="font-bold text-sm">Currently in Chair</h4>
-              <p className="text-xs text-purple-200">
-                You are being styled by {token.assignedBarberName || 'your barber'}.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {isDone && (
-          <div className="p-4 rounded-3xl bg-emerald-600 text-white shadow-lg flex items-center gap-3">
-            <CheckCircle2 className="w-6 h-6" />
-            <div>
-              <h4 className="font-bold text-sm">Service Completed</h4>
-              <p className="text-xs text-emerald-100">
-                Thank you for visiting Branja Barber Studio! Hope you love your new style.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {isCancelled && (
-          <div className="p-4 rounded-3xl bg-red-100 text-red-800 border border-red-200 flex items-center gap-3">
-            <XCircle className="w-6 h-6 text-red-600" />
-            <div>
-              <h4 className="font-bold text-sm">Spot Cancelled</h4>
-              <p className="text-xs text-red-700">This queue spot has been cancelled.</p>
-            </div>
-          </div>
-        )}
-
-        {isNoShow && (
-          <div className="p-4 rounded-3xl bg-amber-100 text-amber-900 border border-amber-200 flex items-center gap-3">
-            <AlertTriangle className="w-6 h-6 text-amber-600" />
-            <div>
-              <h4 className="font-bold text-sm">Marked No-show</h4>
-              <p className="text-xs text-amber-800">
-                Your spot was called but no one checked in. Please re-join the queue at reception if you have returned.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Main Token Badge Card */}
-        <div className="bg-white rounded-3xl p-6 border border-purple-100 shadow-xl space-y-6 text-center relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-600 via-indigo-600 to-amber-400"></div>
-
-          {/* Token Number Display */}
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-widest text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
-              Your Queue Token
+        {/* Waiting Countdown Capsule Card */}
+        {token.status === 'Waiting' && (
+          <div className="p-6 rounded-[28px] bg-[#F7F3EE] border border-[#E4DBD0] text-center space-y-2">
+            <span className="text-[10px] uppercase font-bold tracking-widest text-[#4A4540]">
+              Estimated Wait Ahead
             </span>
-            <h1 className="text-5xl font-black text-gray-900 tracking-tight mt-3">
-              {token.tokenNumber}
-            </h1>
-            <p className="text-sm font-semibold text-gray-700 mt-1">{token.customerName}</p>
+            <p className="text-4xl font-black text-[#1C1A18]">
+              ~{waitStats?.waitMinutes ?? 0}m
+            </p>
+            <div className="pt-2 flex items-center justify-center gap-2">
+              <span className="text-xs font-bold text-[#1C1A18] bg-[#FFFFFF] px-4 py-1 rounded-full border border-[#E4DBD0]">
+                Position #{queuePosition} ({formatOrdinal(queuePosition)} in line)
+              </span>
+            </div>
           </div>
+        )}
 
-          {/* Live Position & Auto-Updating Circular Wait Countdown */}
-          {token.status === 'Waiting' && (
-            <div className="py-4 border-y border-purple-50 flex items-center justify-around">
-              {/* Queue Position */}
-              <div className="flex flex-col items-center">
-                <span className="text-xs text-gray-400 font-medium">Queue Position</span>
-                <span className="text-3xl font-extrabold text-purple-700 mt-0.5">
-                  {formatOrdinal(queuePosition)}
-                </span>
-                <span className="text-[11px] text-gray-500 font-medium">in line</span>
-              </div>
-
-              {/* Circular Wait Countdown */}
-              <div className="relative w-28 h-28 flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                  <path
-                    className="text-purple-100"
-                    strokeWidth="3.5"
-                    stroke="currentColor"
-                    fill="none"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                  <path
-                    className="text-purple-600 transition-all duration-1000"
-                    strokeDasharray="100, 100"
-                    strokeDashoffset="25"
-                    strokeLinecap="round"
-                    strokeWidth="3.5"
-                    stroke="currentColor"
-                    fill="none"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-2xl font-black text-gray-900 leading-none">
-                    ~{waitStats?.waitMinutes ?? 0}
-                  </span>
-                  <span className="text-[10px] font-bold text-gray-500 uppercase mt-0.5">
-                    mins wait
-                  </span>
+        {/* Service Breakdown in Pills */}
+        <div className="space-y-2">
+          <h4 className="text-[11px] font-black text-[#1C1A18] uppercase tracking-wider flex items-center justify-between pl-1">
+            <span>Booked Services</span>
+            <span className="text-[#1C1A18]">Total: ₹{token.totalPrice}</span>
+          </h4>
+          <div className="space-y-1.5">
+            {(token.services || []).map((srv, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between p-3 rounded-full bg-[#F7F3EE] border border-[#E4DBD0] text-xs px-4"
+              >
+                <span className="font-semibold text-[#1C1A18]">{srv.name}</span>
+                <div className="flex items-center gap-3 text-[11px]">
+                  <span className="text-[#4A4540]">{srv.duration}m</span>
+                  <span className="font-bold text-[#1C1A18]">₹{srv.price}</span>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Selected Services & Barber Details */}
-          <div className="space-y-3 text-left bg-purple-50/50 p-4 rounded-2xl border border-purple-100/50">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-500">Selected Services:</span>
-              <span className="font-bold text-gray-900">
-                {token.services.map(s => s.name).join(', ')}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-500">Preferred Barber:</span>
-              <span className="font-bold text-purple-800">
-                {token.preferredBarberName || 'Any barber (fastest)'}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs pt-1 border-t border-purple-100">
-              <span className="text-gray-500">Total Price:</span>
-              <span className="font-extrabold text-gray-900 text-sm">₹{token.totalPrice}</span>
-            </div>
+            ))}
           </div>
-
-          {/* Cancel Spot Button */}
-          {token.status === 'Waiting' && (
-            <button
-              onClick={() => setCancelModalOpen(true)}
-              className="w-full py-2.5 rounded-xl font-semibold text-xs text-red-600 bg-red-50 hover:bg-red-100 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <XCircle className="w-4 h-4" />
-              <span>Cancel my spot</span>
-            </button>
-          )}
         </div>
 
-        {/* Live sync footnote */}
-        <div className="text-center text-[11px] text-gray-400">
-          Auto-updates instantly within 5 seconds without refreshing.
+        {/* Self-Removal Disabled Protection Note */}
+        <div className="p-4 rounded-[24px] bg-[#E4DBD0]/40 border border-[#C2B4A3] flex items-start gap-3">
+          <Icon icon="solar:shield-check-bold" className="w-5 h-5 text-[#1C1A18] shrink-0 mt-0.5" />
+          <div className="text-xs">
+            <p className="font-bold text-[#1C1A18] text-[11px]">Protected Spot</p>
+            <p className="text-[10px] text-[#4A4540] mt-0.5 leading-relaxed">
+              Your position in line is live and locked. Self-removal is disabled to maintain queue fairness. To adjust services or cancel, please check in at the reception desk.
+            </p>
+          </div>
         </div>
       </div>
-
-      {/* Cancel Confirmation Modal */}
-      {cancelModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full border border-gray-100 shadow-2xl text-center space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-gray-900">Cancel Your Spot?</h3>
-              <p className="text-xs text-gray-500 mt-1">
-                You will lose your current position in the queue. You can re-join later at the end of the line.
-              </p>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <button
-                onClick={() => setCancelModalOpen(false)}
-                className="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors cursor-pointer"
-              >
-                Keep My Spot
-              </button>
-              <button
-                onClick={handleCancelSpot}
-                disabled={cancelling}
-                className="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-red-600 hover:bg-red-700 text-white transition-colors cursor-pointer"
-              >
-                {cancelling ? 'Cancelling...' : 'Yes, Cancel'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

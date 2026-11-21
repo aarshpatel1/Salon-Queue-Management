@@ -4,11 +4,11 @@ const SalonConfigSchema = new mongoose.Schema(
   {
     salonName: {
       type: String,
-      default: 'Branja Barber Studio'
+      default: 'Élan Atelier'
     },
     tagline: {
       type: String,
-      default: 'Your style, effortlessly. Find your barber. Book your next fresh look.'
+      default: 'Minimalist Luxury Grooming & Smart Lounge Queue'
     },
     openingTime: {
       type: String,

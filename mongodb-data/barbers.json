@@ -1,0 +1,92 @@
+[
+  {
+    "_id": { "$oid": "673f30010000000000000001" },
+    "name": "Aarav Patel",
+    "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80",
+    "specialty": "Master Stylist & Signature Fade",
+    "isOnDuty": true,
+    "status": "Busy",
+    "currentCustomer": {
+      "tokenId": { "$oid": "673f40010000000000000001" },
+      "tokenNumber": "S-1",
+      "customerName": "Karan Mehta",
+      "services": ["Classic Signature Haircut", "Precision Beard Sculpt & Lineup"],
+      "startedAt": { "$date": "2026-11-21T12:15:00.000Z" },
+      "estimatedDuration": 50
+    },
+    "createdAt": { "$date": "2026-11-21T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T12:15:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f30010000000000000002" },
+    "name": "Tirth Shah",
+    "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80",
+    "specialty": "Beard Artisan & Royal Hot Towel Shave",
+    "isOnDuty": true,
+    "status": "Available",
+    "currentCustomer": {
+      "tokenId": null,
+      "tokenNumber": null,
+      "customerName": null,
+      "services": [],
+      "startedAt": null,
+      "estimatedDuration": 0
+    },
+    "createdAt": { "$date": "2026-11-21T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T08:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f30010000000000000003" },
+    "name": "Meet Prajapati",
+    "avatar": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=300&q=80",
+    "specialty": "Senior Texture & Creative Hair Colorist",
+    "isOnDuty": true,
+    "status": "Available",
+    "currentCustomer": {
+      "tokenId": null,
+      "tokenNumber": null,
+      "customerName": null,
+      "services": [],
+      "startedAt": null,
+      "estimatedDuration": 0
+    },
+    "createdAt": { "$date": "2026-11-21T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T08:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f30010000000000000004" },
+    "name": "Devendra Solanki",
+    "avatar": "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=300&q=80",
+    "specialty": "Botanical Scalp & Beard Sculpting",
+    "isOnDuty": true,
+    "status": "On break",
+    "currentCustomer": {
+      "tokenId": null,
+      "tokenNumber": null,
+      "customerName": null,
+      "services": [],
+      "startedAt": null,
+      "estimatedDuration": 0
+    },
+    "createdAt": { "$date": "2026-11-21T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T08:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f30010000000000000005" },
+    "name": "Parth Joshi",
+    "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=80",
+    "specialty": "Modern Haircut & Facial Grooming",
+    "isOnDuty": true,
+    "status": "Available",
+    "currentCustomer": {
+      "tokenId": null,
+      "tokenNumber": null,
+      "customerName": null,
+      "services": [],
+      "startedAt": null,
+      "estimatedDuration": 0
+    },
+    "createdAt": { "$date": "2026-11-21T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T08:00:00.000Z" }
+  }
+]

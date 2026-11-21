@@ -1,0 +1,279 @@
+[
+  {
+    "_id": { "$oid": "673f40010000000000000001" },
+    "tokenNumber": "S-1",
+    "tokenSequence": 1,
+    "customerName": "Karan Mehta",
+    "phone": "9879101234",
+    "services": [
+      {
+        "serviceId": { "$oid": "673f20010000000000000001" },
+        "name": "Classic Signature Haircut",
+        "duration": 30,
+        "price": 180
+      },
+      {
+        "serviceId": { "$oid": "673f20010000000000000002" },
+        "name": "Precision Beard Sculpt & Lineup",
+        "duration": 20,
+        "price": 100
+      }
+    ],
+    "totalDuration": 50,
+    "totalPrice": 280,
+    "preferredBarber": { "$oid": "673f30010000000000000001" },
+    "preferredBarberName": "Aarav Patel",
+    "assignedBarber": { "$oid": "673f30010000000000000001" },
+    "assignedBarberName": "Aarav Patel",
+    "status": "In chair",
+    "isWalkIn": false,
+    "joinedAt": { "$date": "2026-11-21T11:45:00.000Z" },
+    "calledAt": { "$date": "2026-11-21T12:12:00.000Z" },
+    "startedAt": { "$date": "2026-11-21T12:15:00.000Z" },
+    "createdAt": { "$date": "2026-11-21T11:45:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T12:15:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f40010000000000000002" },
+    "tokenNumber": "S-2",
+    "tokenSequence": 2,
+    "customerName": "Jeet Patel",
+    "phone": "9825012345",
+    "services": [
+      {
+        "serviceId": { "$oid": "673f20010000000000000001" },
+        "name": "Classic Signature Haircut",
+        "duration": 30,
+        "price": 180
+      }
+    ],
+    "totalDuration": 30,
+    "totalPrice": 180,
+    "preferredBarber": null,
+    "preferredBarberName": "Any barber (fastest)",
+    "assignedBarber": null,
+    "assignedBarberName": null,
+    "status": "Waiting",
+    "isWalkIn": false,
+    "joinedAt": { "$date": "2026-11-21T11:55:00.000Z" },
+    "createdAt": { "$date": "2026-11-21T11:55:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T11:55:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f40010000000000000003" },
+    "tokenNumber": "S-3",
+    "tokenSequence": 3,
+    "customerName": "Vraj Doshi",
+    "phone": "9724023456",
+    "services": [
+      {
+        "serviceId": { "$oid": "673f20010000000000000002" },
+        "name": "Precision Beard Sculpt & Lineup",
+        "duration": 20,
+        "price": 100
+      }
+    ],
+    "totalDuration": 20,
+    "totalPrice": 100,
+    "preferredBarber": { "$oid": "673f30010000000000000002" },
+    "preferredBarberName": "Tirth Shah",
+    "assignedBarber": null,
+    "assignedBarberName": null,
+    "status": "Waiting",
+    "isWalkIn": false,
+    "joinedAt": { "$date": "2026-11-21T12:00:00.000Z" },
+    "createdAt": { "$date": "2026-11-21T12:00:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T12:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f40010000000000000004" },
+    "tokenNumber": "S-4",
+    "tokenSequence": 4,
+    "customerName": "Harshil Trivedi",
+    "phone": "9909034567",
+    "services": [
+      {
+        "serviceId": { "$oid": "673f20010000000000000003" },
+        "name": "Botanical Hair Spa & Scalp Therapy",
+        "duration": 45,
+        "price": 450
+      }
+    ],
+    "totalDuration": 45,
+    "totalPrice": 450,
+    "preferredBarber": null,
+    "preferredBarberName": "Any barber (fastest)",
+    "assignedBarber": null,
+    "assignedBarberName": null,
+    "status": "Waiting",
+    "isWalkIn": true,
+    "joinedAt": { "$date": "2026-11-21T12:05:00.000Z" },
+    "createdAt": { "$date": "2026-11-21T12:05:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T12:05:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f40010000000000000005" },
+    "tokenNumber": "S-5",
+    "tokenSequence": 5,
+    "customerName": "Chirag Shah",
+    "phone": "9898045678",
+    "services": [
+      {
+        "serviceId": { "$oid": "673f20010000000000000004" },
+        "name": "Luxury Hot Towel Shave",
+        "duration": 25,
+        "price": 150
+      }
+    ],
+    "totalDuration": 25,
+    "totalPrice": 150,
+    "preferredBarber": { "$oid": "673f30010000000000000005" },
+    "preferredBarberName": "Parth Joshi",
+    "assignedBarber": null,
+    "assignedBarberName": null,
+    "status": "Waiting",
+    "isWalkIn": false,
+    "joinedAt": { "$date": "2026-11-21T12:10:00.000Z" },
+    "createdAt": { "$date": "2026-11-21T12:10:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T12:10:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f40010000000000000006" },
+    "tokenNumber": "S-6",
+    "tokenSequence": 6,
+    "customerName": "Rohan Desai",
+    "phone": "9426056789",
+    "services": [
+      {
+        "serviceId": { "$oid": "673f20010000000000000001" },
+        "name": "Classic Signature Haircut",
+        "duration": 30,
+        "price": 180
+      },
+      {
+        "serviceId": { "$oid": "673f20010000000000000002" },
+        "name": "Precision Beard Sculpt & Lineup",
+        "duration": 20,
+        "price": 100
+      }
+    ],
+    "totalDuration": 50,
+    "totalPrice": 280,
+    "preferredBarber": null,
+    "preferredBarberName": "Any barber (fastest)",
+    "assignedBarber": null,
+    "assignedBarberName": null,
+    "status": "Waiting",
+    "isWalkIn": false,
+    "joinedAt": { "$date": "2026-11-21T12:14:00.000Z" },
+    "createdAt": { "$date": "2026-11-21T12:14:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T12:14:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f40010000000000000007" },
+    "tokenNumber": "S-7",
+    "tokenSequence": 7,
+    "customerName": "Bhavik Bhatt",
+    "phone": "9974067890",
+    "services": [
+      {
+        "serviceId": { "$oid": "673f20010000000000000001" },
+        "name": "Classic Signature Haircut",
+        "duration": 30,
+        "price": 180
+      }
+    ],
+    "totalDuration": 30,
+    "totalPrice": 180,
+    "preferredBarber": { "$oid": "673f30010000000000000003" },
+    "preferredBarberName": "Meet Prajapati",
+    "assignedBarber": null,
+    "assignedBarberName": null,
+    "status": "Waiting",
+    "isWalkIn": false,
+    "joinedAt": { "$date": "2026-11-21T12:18:00.000Z" },
+    "createdAt": { "$date": "2026-11-21T12:18:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T12:18:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f40010000000000000008" },
+    "tokenNumber": "S-8",
+    "tokenSequence": 8,
+    "customerName": "Dhyey Vora",
+    "phone": "9712089012",
+    "services": [
+      {
+        "serviceId": { "$oid": "673f20010000000000000002" },
+        "name": "Precision Beard Sculpt & Lineup",
+        "duration": 20,
+        "price": 100
+      }
+    ],
+    "totalDuration": 20,
+    "totalPrice": 100,
+    "preferredBarber": null,
+    "preferredBarberName": "Any barber (fastest)",
+    "assignedBarber": null,
+    "assignedBarberName": null,
+    "status": "Waiting",
+    "isWalkIn": true,
+    "joinedAt": { "$date": "2026-11-21T12:20:00.000Z" },
+    "createdAt": { "$date": "2026-11-21T12:20:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T12:20:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f40010000000000000009" },
+    "tokenNumber": "S-9",
+    "tokenSequence": 9,
+    "customerName": "Jaimin Raval",
+    "phone": "9824078901",
+    "services": [
+      {
+        "serviceId": { "$oid": "673f20010000000000000002" },
+        "name": "Precision Beard Sculpt & Lineup",
+        "duration": 20,
+        "price": 100
+      }
+    ],
+    "totalDuration": 20,
+    "totalPrice": 100,
+    "preferredBarber": { "$oid": "673f30010000000000000002" },
+    "preferredBarberName": "Tirth Shah",
+    "assignedBarber": null,
+    "assignedBarberName": null,
+    "status": "Waiting",
+    "isWalkIn": false,
+    "joinedAt": { "$date": "2026-11-21T12:22:00.000Z" },
+    "createdAt": { "$date": "2026-11-21T12:22:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T12:22:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "673f40010000000000000010" },
+    "tokenNumber": "S-10",
+    "tokenSequence": 10,
+    "customerName": "Anuj Parmar",
+    "phone": "9879090123",
+    "services": [
+      {
+        "serviceId": { "$oid": "673f20010000000000000001" },
+        "name": "Classic Signature Haircut",
+        "duration": 30,
+        "price": 180
+      }
+    ],
+    "totalDuration": 30,
+    "totalPrice": 180,
+    "preferredBarber": { "$oid": "673f30010000000000000005" },
+    "preferredBarberName": "Parth Joshi",
+    "assignedBarber": { "$oid": "673f30010000000000000005" },
+    "assignedBarberName": "Parth Joshi",
+    "status": "Done",
+    "isWalkIn": false,
+    "joinedAt": { "$date": "2026-11-21T11:00:00.000Z" },
+    "calledAt": { "$date": "2026-11-21T11:10:00.000Z" },
+    "startedAt": { "$date": "2026-11-21T11:12:00.000Z" },
+    "completedAt": { "$date": "2026-11-21T11:42:00.000Z" },
+    "createdAt": { "$date": "2026-11-21T11:00:00.000Z" },
+    "updatedAt": { "$date": "2026-11-21T11:42:00.000Z" }
+  }
+]

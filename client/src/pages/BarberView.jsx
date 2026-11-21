@@ -1,39 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Icon } from '@iconify/react';
 import apiRequest from '../api/apiClient';
 import { useSocket } from '../context/SocketContext';
-import {
-  Scissors,
-  Clock,
-  Play,
-  CheckCircle2,
-  Coffee,
-  User,
-  Sparkles,
-  ArrowRight,
-  AlertCircle,
-  Phone,
-  RefreshCw
-} from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import CustomDropdown from '../components/CustomDropdown';
+import RealTimeTimeline from '../components/RealTimeTimeline';
+import CustomerProfileModal from '../components/CustomerProfileModal';
 
 export default function BarberView() {
   const { name } = useParams();
   const navigate = useNavigate();
   const { lastSyncTime } = useSocket();
+  const { addToast } = useToast();
 
   const [barber, setBarber] = useState(null);
   const [currentToken, setCurrentToken] = useState(null);
   const [nextForYou, setNextForYou] = useState(null);
+  const [allWaiting, setAllWaiting] = useState([]);
   const [allBarbers, setAllBarbers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [actionLoading, setActionLoading] = useState(false);
+  const [selectedProfileToken, setSelectedProfileToken] = useState(null);
 
   // Fetch Barber Info & Assigned Customer
   const fetchBarberData = async () => {
     try {
+      const decodedParam = decodeURIComponent(name || 'Aarav Patel');
       const [barberRes, allBarbersRes] = await Promise.all([
-        apiRequest(`/api/barbers/${encodeURIComponent(name)}`),
+        apiRequest(`/api/barbers/${encodeURIComponent(decodedParam)}`),
         apiRequest('/api/barbers')
       ]);
 
@@ -41,6 +36,7 @@ export default function BarberView() {
         setBarber(barberRes.barber);
         setCurrentToken(barberRes.currentToken);
         setNextForYou(barberRes.nextForYou);
+        setAllWaiting(barberRes.allWaiting || []);
       }
       if (allBarbersRes.success) {
         setAllBarbers(allBarbersRes.barbers);
@@ -56,23 +52,6 @@ export default function BarberView() {
     fetchBarberData();
   }, [name, lastSyncTime]);
 
-  // Live Timer for elapsed service duration
-  useEffect(() => {
-    let timer = null;
-    if (currentToken && currentToken.status === 'In chair' && currentToken.startedAt) {
-      const startMs = new Date(currentToken.startedAt).getTime();
-      const updateTimer = () => {
-        const sec = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
-        setElapsedSeconds(sec);
-      };
-      updateTimer();
-      timer = setInterval(updateTimer, 1000);
-    } else {
-      setElapsedSeconds(0);
-    }
-    return () => clearInterval(timer);
-  }, [currentToken]);
-
   // Start Service ([ Start ] -> In chair)
   const handleStartService = async () => {
     if (!currentToken) return;
@@ -83,10 +62,11 @@ export default function BarberView() {
         body: JSON.stringify({ tokenId: currentToken._id })
       });
       if (res.success) {
+        addToast('Service started. Timer is now running.', 'success');
         fetchBarberData();
       }
     } catch (err) {
-      alert(err.message || 'Failed to start service');
+      addToast(err.message || 'Failed to start service', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -102,10 +82,11 @@ export default function BarberView() {
         body: JSON.stringify({ tokenId: currentToken._id })
       });
       if (res.success) {
+        addToast('Service completed successfully. Chair is now open!', 'success');
         fetchBarberData();
       }
     } catch (err) {
-      alert(err.message || 'Failed to complete service');
+      addToast(err.message || 'Failed to complete service', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -121,43 +102,57 @@ export default function BarberView() {
         body: JSON.stringify({ barberId: barber._id })
       });
       if (res.success) {
+        addToast(`Status updated: ${res.barber.status}`, 'info');
         fetchBarberData();
       }
     } catch (err) {
-      alert(err.message || 'Could not change break status');
+      addToast(err.message || 'Could not change break status', 'error');
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Format mm:ss
-  const formatTime = (totalSec) => {
-    const mins = Math.floor(totalSec / 60);
-    const secs = totalSec % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  // Call Next for this barber directly
+  const handleCallNext = async () => {
+    if (!barber) return;
+    setActionLoading(true);
+    try {
+      const res = await apiRequest('/api/queue/call-next', {
+        method: 'POST',
+        body: JSON.stringify({ barberId: barber._id })
+      });
+      if (res.success) {
+        addToast(`Called ${res.token.customerName} to your chair`, 'success');
+        fetchBarberData();
+      }
+    } catch (err) {
+      addToast(err.message || 'No waiting customers match your station', 'warning');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8f6fc] flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-12 h-12 rounded-full border-4 border-purple-200 border-t-purple-700 animate-spin mb-4"></div>
-        <p className="text-xs font-semibold text-gray-500">Loading barber station...</p>
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center select-none">
+        <Icon icon="solar:refresh-bold" className="w-8 h-8 text-[#1C1A18] animate-spin mb-3" />
+        <p className="text-xs font-bold text-[#1C1A18]">Loading Stylist Station...</p>
       </div>
     );
   }
 
   if (!barber) {
     return (
-      <div className="min-h-screen bg-[#f8f6fc] flex flex-col items-center justify-center p-6 text-center">
-        <AlertCircle className="w-10 h-10 text-amber-500 mb-2" />
-        <h2 className="text-lg font-bold text-gray-900 mb-1">Barber Not Found</h2>
-        <p className="text-xs text-gray-500 mb-4">Select another stylist from the list:</p>
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center select-none">
+        <Icon icon="solar:danger-triangle-bold" className="w-10 h-10 text-[#ef4444] mb-2" />
+        <h2 className="text-base font-black text-[#1C1A18] mb-1">Stylist Station Not Found</h2>
+        <p className="text-xs text-[#4A4540] mb-4">Please select an active stylist:</p>
         <div className="flex flex-wrap gap-2 justify-center max-w-xs">
           {allBarbers.map((b) => (
             <button
               key={b._id}
               onClick={() => navigate(`/barber/${encodeURIComponent(b.name)}`)}
-              className="px-3 py-1.5 rounded-xl bg-purple-100 text-purple-800 text-xs font-medium cursor-pointer"
+              className="px-4 py-2 rounded-full bg-[#1C1A18] text-[#F7F3EE] text-xs font-bold cursor-pointer"
             >
               {b.name}
             </button>
@@ -171,192 +166,244 @@ export default function BarberView() {
   const isServing = currentToken && currentToken.status === 'In chair';
   const isCalled = currentToken && currentToken.status === 'Called';
 
-  return (
-    <div className="min-h-screen bg-[#f8f6fc] py-6 px-4 md:px-6">
-      <div className="max-w-md mx-auto space-y-5">
-        {/* Switch Barber Station selector dropdown */}
-        <div className="flex items-center justify-between">
-          <select
-            value={barber.name}
-            onChange={(e) => navigate(`/barber/${encodeURIComponent(e.target.value)}`)}
-            className="text-xs font-bold text-purple-900 bg-purple-50 border border-purple-200 px-3 py-1.5 rounded-full cursor-pointer focus:outline-none"
-          >
-            {allBarbers.map((b) => (
-              <option key={b._id} value={b.name}>
-                Stylist: {b.name} ({b.status})
-              </option>
-            ))}
-          </select>
+  const stylistOptions = allBarbers.map((b) => ({
+    value: b.name,
+    label: `${b.name} (${b.status})`
+  }));
 
-          <span className="text-[10px] uppercase font-bold tracking-wider text-purple-700 bg-purple-100/60 px-2.5 py-1 rounded-full">
-            Staff Console
+  return (
+    <div className="space-y-5 max-w-md mx-auto select-none py-1">
+      {/* Switch Stylist Station Dropdown Pill */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="w-64">
+          <CustomDropdown
+            options={stylistOptions}
+            value={barber.name}
+            onChange={(newName) => navigate(`/barber/${encodeURIComponent(newName)}`)}
+          />
+        </div>
+
+        <span className="text-[10px] uppercase font-black tracking-wider text-[#1C1A18] bg-[#E4DBD0] px-3.5 py-1.5 rounded-full border border-[#C2B4A3]">
+          Staff Chair
+        </span>
+      </div>
+
+      {/* Stylist Profile Pill Card & Break Toggle */}
+      <div className="bg-[#FFFFFF] rounded-[32px] p-5 border border-[#E4DBD0] shadow-xs flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <img
+            src={barber.avatar}
+            alt={barber.name}
+            className="w-12 h-12 rounded-full object-cover border border-[#C2B4A3] shrink-0"
+          />
+          <div>
+            <h1 className="text-base font-black text-[#1C1A18]">{barber.name}</h1>
+            <p className="text-[11px] text-[#4A4540] font-medium">{barber.specialty}</p>
+            <div className="mt-1">
+              <span
+                className={`inline-block text-[9px] font-black px-2.5 py-0.5 rounded-full border ${
+                  barber.status === 'Available'
+                    ? 'bg-[#1C1A18] text-[#F7F3EE] border-[#1C1A18]'
+                    : barber.status === 'Busy'
+                    ? 'bg-[#E4DBD0] text-[#1C1A18] border-[#C2B4A3]'
+                    : 'bg-[#F7F3EE] text-[#4A4540] border-[#E4DBD0]'
+                }`}
+              >
+                {barber.status}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={handleToggleBreak}
+          disabled={barber.status === 'Busy' || actionLoading}
+          className={`px-4 py-2 rounded-full text-xs font-bold border transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+            isOnBreak
+              ? 'bg-[#1C1A18] text-[#F7F3EE] border-[#1C1A18]'
+              : 'bg-[#F7F3EE] text-[#1C1A18] border-[#E4DBD0] hover:bg-[#E4DBD0]'
+          }`}
+        >
+          <Icon icon={isOnBreak ? 'solar:play-circle-bold' : 'solar:cup-bold'} className="w-4 h-4" />
+          <span>{isOnBreak ? 'Resume' : 'Rest'}</span>
+        </button>
+      </div>
+
+      {/* Active Customer in Chair or Called Capsule */}
+      <div className="bg-[#FFFFFF] rounded-[32px] p-6 border border-[#E4DBD0] shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-3">
+          <h2 className="text-xs font-black uppercase tracking-wider text-[#1C1A18] flex items-center gap-1.5">
+            <Icon icon="solar:chair-bold" className="w-4 h-4 text-[#4A4540]" />
+            <span>Chair Session</span>
+          </h2>
+
+          {currentToken && (
+            <span
+              className={`text-[10px] font-black px-3 py-1 rounded-full ${
+                isServing
+                  ? 'bg-[#1C1A18] text-[#F7F3EE]'
+                  : 'bg-[#E4DBD0] text-[#1C1A18]'
+              }`}
+            >
+              {currentToken.status}
+            </span>
+          )}
+        </div>
+
+        {currentToken ? (
+          <div className="space-y-4">
+            <div
+              onClick={() => setSelectedProfileToken(currentToken)}
+              className="p-4 rounded-[24px] bg-[#F7F3EE] border border-[#E4DBD0] flex items-center justify-between cursor-pointer hover:border-[#1C1A18] transition-colors"
+            >
+              <div>
+                <span className="text-xs font-black text-[#F7F3EE] bg-[#1C1A18] px-3 py-0.5 rounded-full">
+                  {currentToken.tokenNumber}
+                </span>
+                <h3 className="text-base font-black text-[#1C1A18] mt-2">
+                  {currentToken.customerName}
+                </h3>
+                <p className="text-[11px] text-[#4A4540] mt-0.5 font-medium">
+                  {(currentToken.services || []).map((s) => s.name).join(', ')}
+                </p>
+              </div>
+
+              <div className="text-right">
+                <span className="text-sm font-black text-[#1C1A18]">
+                  ₹{currentToken.totalPrice}
+                </span>
+                <p className="text-[10px] text-[#4A4540]">
+                  Est. {currentToken.totalDuration}m
+                </p>
+              </div>
+            </div>
+
+            {/* REAL-TIME LIVE TIMELINE: Starts when customer seats with barber! */}
+            {isServing && (
+              <RealTimeTimeline
+                startedAt={currentToken.startedAt || new Date()}
+                estimatedDuration={currentToken.totalDuration || 30}
+                status="In chair"
+                compact={false}
+              />
+            )}
+
+            {/* Pill Action Buttons: Seat or Done */}
+            <div className="flex gap-2.5 pt-1">
+              {isCalled && (
+                <button
+                  onClick={handleStartService}
+                  disabled={actionLoading}
+                  className="flex-1 py-3 rounded-full bg-[#1C1A18] hover:bg-[#4A4540] text-[#F7F3EE] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                >
+                  <Icon icon="solar:play-circle-bold" className="w-4 h-4 text-[#C2B4A3]" />
+                  <span>Seat Guest (Start Live Timer)</span>
+                </button>
+              )}
+
+              {isServing && (
+                <button
+                  onClick={handleDoneService}
+                  disabled={actionLoading}
+                  className="flex-1 py-3 rounded-full bg-[#1C1A18] hover:bg-[#4A4540] text-[#F7F3EE] font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                >
+                  <Icon icon="solar:check-circle-bold" className="w-4 h-4 text-[#C2B4A3]" />
+                  <span>Complete Service (Done)</span>
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="py-8 text-center text-[#4A4540] space-y-3">
+            <Icon icon="solar:scissors-bold" className="w-8 h-8 text-[#C2B4A3] mx-auto" />
+            <div>
+              <p className="text-xs font-bold text-[#1C1A18]">Chair is currently free</p>
+              <p className="text-[11px] text-[#4A4540] mt-0.5 font-medium">
+                Ready for next guest in queue
+              </p>
+            </div>
+
+            <button
+              onClick={handleCallNext}
+              disabled={isOnBreak || actionLoading}
+              className="px-6 py-2.5 rounded-full bg-[#1C1A18] hover:bg-[#4A4540] text-[#F7F3EE] font-bold text-xs inline-flex items-center gap-2 cursor-pointer disabled:opacity-40 shadow-xs"
+            >
+              <Icon icon="solar:phone-calling-rounded-bold" className="w-4 h-4 text-[#C2B4A3]" />
+              <span>Call Next to My Chair</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Up Next For You Pill Card & Full Queue List */}
+      <div className="bg-[#FFFFFF] rounded-[32px] p-6 border border-[#E4DBD0] shadow-xs space-y-3">
+        <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-2.5">
+          <h3 className="text-xs font-black text-[#1C1A18] uppercase tracking-wider flex items-center gap-1.5">
+            <Icon icon="solar:user-bold" className="w-4 h-4 text-[#1C1A18]" />
+            <span>Next In Line For Your Station</span>
+          </h3>
+          <span className="text-[10px] font-black text-[#1C1A18] bg-[#E4DBD0] px-2.5 py-0.5 rounded-full border border-[#C2B4A3]">
+            Preview
           </span>
         </div>
 
-        {/* Barber Profile Header & Break Toggle */}
-        <div className="bg-white rounded-3xl p-5 border border-purple-100 shadow-sm flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <img
-              src={barber.avatar}
-              alt={barber.name}
-              className="w-14 h-14 rounded-2xl object-cover ring-2 ring-purple-600/30 shadow-md shrink-0"
-            />
-            <div>
-              <h1 className="text-base font-bold text-gray-900">{barber.name}</h1>
-              <p className="text-xs text-gray-500">{barber.specialty || 'Senior Stylist'}</p>
-              <div className="mt-1 flex items-center gap-1.5">
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    isOnBreak ? 'bg-amber-500' : isServing ? 'bg-purple-600' : 'bg-emerald-500'
-                  }`}
-                ></span>
-                <span className="text-[11px] font-semibold text-gray-600">
-                  {barber.status}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* On Break / Available Toggle Button */}
-          <button
-            onClick={handleToggleBreak}
-            disabled={actionLoading || isServing}
-            className={`px-3 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer ${
-              isOnBreak
-                ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200'
-                : 'bg-amber-100 hover:bg-amber-200 text-amber-900'
-            } disabled:opacity-40 disabled:cursor-not-allowed`}
+        {nextForYou ? (
+          <div
+            onClick={() => setSelectedProfileToken(nextForYou)}
+            className="p-3.5 rounded-full bg-[#F7F3EE] border border-[#E4DBD0] flex items-center justify-between cursor-pointer hover:border-[#1C1A18] transition-colors px-4"
           >
-            <Coffee className="w-3.5 h-3.5" />
-            <span>{isOnBreak ? 'End Break' : 'Take Break'}</span>
-          </button>
-        </div>
-
-        {/* Main Current Customer Card */}
-        <div className="bg-white rounded-3xl p-6 border border-purple-100 shadow-md space-y-5">
-          <div className="flex items-center justify-between border-b border-purple-50 pb-3">
-            <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <Scissors className="w-4 h-4 text-purple-600 -rotate-45" />
-              <span>Current Customer in Chair</span>
-            </h2>
-            {currentToken && (
-              <span className="text-[11px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">
-                Status: {currentToken.status}
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="text-xs font-black text-[#F7F3EE] bg-[#1C1A18] px-2.5 py-0.5 rounded-full shrink-0">
+                {nextForYou.tokenNumber}
               </span>
-            )}
-          </div>
-
-          {currentToken ? (
-            <div className="space-y-4">
-              {/* Token & Client Details */}
-              <div className="bg-purple-50/60 p-4 rounded-2xl border border-purple-100 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-black text-purple-900">
-                    {currentToken.tokenNumber}
-                  </span>
-                  <span className="text-xs font-bold text-gray-900">
-                    {currentToken.customerName}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-600">
-                  <p className="font-medium">
-                    Services: {currentToken.services.map((s) => s.name).join(', ')}
-                  </p>
-                  <p className="text-[11px] text-gray-500 mt-0.5">
-                    Total: ₹{currentToken.totalPrice} · Est: {currentToken.totalDuration} min
-                  </p>
-                </div>
-              </div>
-
-              {/* Live Elapsed Service Timer */}
-              {isServing && (
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-900 to-indigo-950 text-white text-center shadow-inner">
-                  <span className="text-[10px] font-bold tracking-widest uppercase text-purple-300">
-                    Service In Progress · Live Elapsed Timer
-                  </span>
-                  <h3 className="text-4xl font-mono font-black tracking-tight my-1">
-                    {formatTime(elapsedSeconds)}
-                  </h3>
-                  <p className="text-[11px] text-purple-200">
-                    Expected ~{currentToken.totalDuration} mins
-                  </p>
-                </div>
-              )}
-
-              {/* Sequential Action Buttons: [ Start ] -> [ Done ] */}
-              <div className="pt-2">
-                {isCalled && (
-                  <button
-                    onClick={handleStartService}
-                    disabled={actionLoading}
-                    className="w-full py-3.5 rounded-2xl font-bold text-sm bg-gradient-to-r from-purple-700 to-indigo-600 hover:from-purple-800 hover:to-indigo-700 text-white shadow-lg shadow-purple-300 flex items-center justify-center gap-2 cursor-pointer transition-all"
-                  >
-                    <Play className="w-4 h-4" />
-                    <span>Start Service (Seat in Chair)</span>
-                  </button>
-                )}
-
-                {isServing && (
-                  <button
-                    onClick={handleDoneService}
-                    disabled={actionLoading}
-                    className="w-full py-3.5 rounded-2xl font-bold text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg shadow-emerald-200 flex items-center justify-center gap-2 cursor-pointer transition-all"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Complete Service (Mark Done)</span>
-                  </button>
-                )}
-              </div>
+              <span className="text-xs font-bold text-[#1C1A18] truncate">
+                {nextForYou.customerName}
+              </span>
             </div>
-          ) : (
-            <div className="py-10 text-center text-gray-400">
-              <User className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-xs font-semibold">No customer currently assigned to your chair.</p>
-              <p className="text-[11px] text-gray-400 mt-0.5">
-                Reception will call your next client or check the preview below.
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* 'Next for you' Preview Card */}
-        <div className="bg-white rounded-3xl p-5 border border-purple-100 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold text-gray-900 flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Next In Line For You</span>
-            </h3>
-            <span className="text-[10px] text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full font-semibold">
-              Preview
+            <span className="text-[10px] font-bold text-[#1C1A18] bg-[#FFFFFF] px-3 py-1 rounded-full border border-[#E4DBD0] shrink-0">
+              ~{nextForYou.totalDuration}m
             </span>
           </div>
+        ) : (
+          <div className="p-3 rounded-full bg-[#F7F3EE] border border-[#E4DBD0] text-center">
+            <p className="text-xs text-[#4A4540] font-medium">No direct booking ahead</p>
+          </div>
+        )}
 
-          {nextForYou ? (
-            <div className="p-3.5 rounded-2xl bg-amber-50/50 border border-amber-200/80 flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-extrabold text-amber-900">
-                    {nextForYou.tokenNumber}
-                  </span>
-                  <span className="text-xs font-bold text-gray-800">
-                    {nextForYou.customerName}
+        {/* Full Salon Waiting Queue in Pills */}
+        {allWaiting.length > 0 && (
+          <div className="pt-2">
+            <p className="text-[11px] font-black text-[#1C1A18] mb-2 pl-1">
+              All Salon Waiting Clients ({allWaiting.length})
+            </p>
+            <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1 scrollbar-thin">
+              {allWaiting.map((token) => (
+                <div
+                  key={token._id}
+                  onClick={() => setSelectedProfileToken(token)}
+                  className="p-2.5 rounded-full border border-[#E4DBD0] bg-[#FFFFFF] hover:border-[#1C1A18] flex items-center justify-between text-xs cursor-pointer transition-colors px-4"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="font-black text-[#1C1A18]">{token.tokenNumber}</span>
+                    <span className="font-semibold text-[#1C1A18]">{token.customerName}</span>
+                  </div>
+                  <span className="text-[10px] text-[#4A4540]">
+                    Pref: {token.preferredBarberName || 'Any'}
                   </span>
                 </div>
-                <p className="text-[10px] text-gray-500 mt-0.5">
-                  {nextForYou.services.map((s) => s.name).join(', ')} (₹{nextForYou.totalPrice})
-                </p>
-              </div>
-              <span className="text-[10px] font-bold text-purple-700 bg-white px-2 py-1 rounded-lg border border-purple-100">
-                ~{nextForYou.totalDuration}m
-              </span>
+              ))}
             </div>
-          ) : (
-            <div className="p-4 rounded-2xl bg-gray-50 border border-dashed border-gray-200 text-center">
-              <p className="text-xs text-gray-400 font-medium">No waiting customers in line</p>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
+
+      {/* Customer Profile Modal */}
+      <CustomerProfileModal
+        token={selectedProfileToken}
+        isOpen={!!selectedProfileToken}
+        onClose={() => setSelectedProfileToken(null)}
+        isStaffView={true}
+      />
     </div>
   );
 }
