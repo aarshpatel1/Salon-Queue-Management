@@ -109,9 +109,32 @@ export default function MyStatus() {
 
   if (loading) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-6 text-center select-none">
-        <Icon icon="solar:refresh-bold" className="w-8 h-8 text-[#1C1A18] animate-spin mb-3" />
-        <p className="text-xs font-bold text-[#1C1A18]">Connecting to Live Queue...</p>
+      <div className="max-w-xl mx-auto py-6 select-none animate-fade-in-scale">
+        <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-[#E4DBD0]/60">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-[#1C1A18] text-[#F7F3EE] flex items-center justify-center shadow-md">
+                <Icon icon="solar:ticket-bold" className="w-6 h-6 text-[#C2B4A3] animate-pulse" />
+              </div>
+              <div className="space-y-1.5">
+                <div className="h-4 w-32 rounded-full luxury-shimmer" />
+                <div className="h-3 w-44 rounded-full luxury-shimmer" />
+              </div>
+            </div>
+            <div className="h-7 w-20 rounded-full luxury-shimmer" />
+          </div>
+
+          <div className="p-6 rounded-[28px] bg-[#F7F3EE]/50 border border-[#E4DBD0] text-center space-y-3">
+            <div className="w-16 h-16 rounded-full luxury-shimmer mx-auto" />
+            <div className="h-8 w-24 rounded-full luxury-shimmer mx-auto" />
+            <div className="h-4 w-40 rounded-full luxury-shimmer mx-auto" />
+          </div>
+
+          <div className="space-y-2">
+            <div className="h-10 w-full rounded-full luxury-shimmer" />
+            <div className="h-10 w-full rounded-full luxury-shimmer" />
+          </div>
+        </div>
       </div>
     );
   }

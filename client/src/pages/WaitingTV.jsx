@@ -6,6 +6,7 @@ import { useSocket } from '../context/SocketContext';
 import { playChime } from '../utils/audioChime';
 import RealTimeTimeline from '../components/RealTimeTimeline';
 import Avatar from '../components/Avatar';
+import WaitingTVLoader from '../components/WaitingTVLoader';
 
 export default function WaitingTV() {
   const { lastSyncTime, lastCalledAlert } = useSocket();
@@ -80,6 +81,11 @@ export default function WaitingTV() {
         </NavLink>
       </div>
     );
+  }
+
+  // Live TV Loader while synchronizing lounge queue & barber stations
+  if (!summaryData) {
+    return <WaitingTVLoader />;
   }
 
   return (

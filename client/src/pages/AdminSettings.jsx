@@ -7,6 +7,7 @@ import ServiceModal from '../components/ServiceModal';
 import BarberModal from '../components/BarberModal';
 import Avatar from '../components/Avatar';
 import CustomModal from '../components/CustomModal';
+import AdminLoader from '../components/AdminLoader';
 
 export default function AdminSettings() {
   const { lastSyncTime } = useSocket();
@@ -158,6 +159,10 @@ export default function AdminSettings() {
   const config = adminData?.config;
   const barbers = adminData?.barbers || [];
   const isMasterOpen = config?.isMasterQueueOpen !== false;
+
+  if (loading && !adminData) {
+    return <AdminLoader />;
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto select-none py-1">

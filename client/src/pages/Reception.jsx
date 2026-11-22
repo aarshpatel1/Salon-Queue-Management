@@ -9,6 +9,7 @@ import EditCustomerModal from '../components/EditCustomerModal';
 import RealTimeTimeline from '../components/RealTimeTimeline';
 import Avatar from '../components/Avatar';
 import CustomModal from '../components/CustomModal';
+import ReceptionLoader, { ReceptionTableSkeleton } from '../components/ReceptionLoader';
 
 export default function Reception() {
   const { lastSyncTime } = useSocket();
@@ -254,6 +255,11 @@ export default function Reception() {
     return Math.max(0, Math.floor(diffMs / 60000));
   };
 
+  // Full Page Luxury Loader for Reception Desk & Console
+  if (loading) {
+    return <ReceptionLoader />;
+  }
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto select-none py-1">
       {/* Top Header Capsule Bar for Reception */}
@@ -446,7 +452,9 @@ export default function Reception() {
             </span>
           </div>
 
-          {waitingList.length === 0 ? (
+          {loading ? (
+            <ReceptionTableSkeleton count={5} />
+          ) : waitingList.length === 0 ? (
             <div className="py-12 text-center text-[#4A4540]">
               <Icon icon="solar:check-circle-bold" className="w-10 h-10 text-[#1C1A18] mx-auto mb-2" />
               <p className="text-xs font-bold">Queue is clear! No guests waiting.</p>
@@ -526,14 +534,14 @@ export default function Reception() {
                       </button>
 
                       {/* Delete Button */}
-                      <button
+                      {/* <button
                         type="button"
                         onClick={() => handleDeleteToken(item._id, item.customerName)}
                         title="Remove from Queue"
                         className="w-7 h-7 rounded-full bg-[#F7F3EE] hover:bg-[#ef4444]/20 border border-[#E4DBD0] text-[#4A4540] hover:text-[#ef4444] flex items-center justify-center transition-colors cursor-pointer"
                       >
                         <Icon icon="solar:trash-bin-trash-bold" className="w-3.5 h-3.5" />
-                      </button>
+                      </button> */}
 
                       {isCalled ? (
                         <button

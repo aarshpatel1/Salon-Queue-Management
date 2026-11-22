@@ -8,6 +8,7 @@ import CustomDropdown from '../components/CustomDropdown';
 import RealTimeTimeline from '../components/RealTimeTimeline';
 import CustomerProfileModal from '../components/CustomerProfileModal';
 import Avatar from '../components/Avatar';
+import StylistLoader, { StylistTableSkeleton } from '../components/StylistLoader';
 
 export default function BarberView() {
   const { name } = useParams();
@@ -154,12 +155,7 @@ export default function BarberView() {
   };
 
   if (loading) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center p-6 text-center select-none">
-        <Icon icon="solar:refresh-bold" className="w-8 h-8 text-[#1C1A18] animate-spin mb-3" />
-        <p className="text-xs font-bold text-[#1C1A18]">Loading Stylist Station...</p>
-      </div>
-    );
+    return <StylistLoader />;
   }
 
   if (!barber) {
@@ -481,7 +477,9 @@ export default function BarberView() {
               </span>
             </div>
 
-            {allWaiting.length === 0 ? (
+            {loading ? (
+              <StylistTableSkeleton count={4} />
+            ) : allWaiting.length === 0 ? (
               <div className="py-8 text-center text-[#4A4540]">
                 <Icon icon="solar:check-circle-bold" className="w-8 h-8 text-[#1C1A18] mx-auto mb-1.5" />
                 <p className="text-xs font-bold">No clients currently waiting</p>

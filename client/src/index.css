@@ -346,3 +346,34 @@ aside::-webkit-scrollbar-thumb:hover {
 .stagger-7 { animation-delay: 350ms; }
 .stagger-8 { animation-delay: 400ms; }
 
+/* Luxury Skeleton Shimmer Animations for Loaders */
+@keyframes luxuryShimmerLight {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes luxuryShimmerDark {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.luxury-shimmer {
+  background: linear-gradient(90deg, #E4DBD0 0%, #F5EFEB 50%, #E4DBD0 100%);
+  background-size: 200% 100%;
+  animation: luxuryShimmerLight 1.8s ease-in-out infinite;
+}
+
+.luxury-shimmer-dark {
+  background: linear-gradient(90deg, #262320 0%, #3D3834 50%, #262320 100%);
+  background-size: 200% 100%;
+  animation: luxuryShimmerDark 1.8s ease-in-out infinite;
+}
+

@@ -6,6 +6,7 @@ import { useSocket } from "../context/SocketContext";
 import CustomerProfileModal from "../components/CustomerProfileModal";
 import RealTimeTimeline from "../components/RealTimeTimeline";
 import Avatar from "../components/Avatar";
+import HomeLoader from "../components/HomeLoader";
 
 export default function Home() {
 	const { lastSyncTime } = useSocket();
@@ -35,6 +36,10 @@ export default function Home() {
 	const barbers = data?.barbers || [];
 	const isOnlineOpen = data?.isOnlineJoiningAllowed;
 	const waitingTokens = data?.waitingTokens || data?.upNext || [];
+
+	if (loading && !data) {
+		return <HomeLoader />;
+	}
 
 	return (
 		<div className="space-y-6 max-w-7xl mx-auto select-none py-1">
