@@ -71,7 +71,7 @@ export default function Sidebar() {
       </div>
 
       {/* Static Footer Inside 100% dvh (Pinned at bottom, shrink-0) */}
-      <div className="shrink-0 pt-4 mt-auto space-y-3 border-t border-[#4A4540]/40 bg-[#1C1A18]">
+      <div className="shrink-0 pt-4 mt-auto space-y-3 border-[#4A4540]/40 bg-[#1C1A18]">
         {/* Staff Authentication Status Pill */}
         <div className="p-3 rounded-full bg-[#4A4540]/30 border border-[#4A4540]/60 flex items-center justify-between text-xs px-4">
           <div className="flex items-center gap-2 min-w-0">
