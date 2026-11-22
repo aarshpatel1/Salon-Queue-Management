@@ -1,4 +1,4 @@
-# Élan Atelier — Real-Time Salon Queue Management System
+# Élan Atelier — Real-Time Salon Queue Management System [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/aarshpatel1/Salon-Queue-Management)
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel%20Production-success?style=for-the-badge&logo=vercel)](https://salon-queue-management-mauve.vercel.app/)
 [![Backend](https://img.shields.io/badge/Backend-Render.com%20Active-blue?style=for-the-badge&logo=render)](https://salon-queue-management-mauve.vercel.app/)
