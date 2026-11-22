@@ -4,8 +4,7 @@
 [![Database](https://img.shields.io/badge/Database-MongoDB%20Atlas-green?style=for-the-badge&logo=mongodb)](https://salon-queue-management-mauve.vercel.app/)
 [![WebSocket](https://img.shields.io/badge/Real--Time-Socket.io%20%3C100ms-black?style=for-the-badge&logo=socketdotio)](https://salon-queue-management-mauve.vercel.app/)
 
-## Detailed Documentation on Deepwiki.com  
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/aarshpatel1/Salon-Queue-Management)
+## Detailed Documentation on Deepwiki.com [Ask DeepWiki](https://deepwiki.com/aarshpatel1/Salon-Queue-Management)
 
 > 🌐 **Live Deployed Application**: [https://salon-queue-management-mauve.vercel.app/](https://salon-queue-management-mauve.vercel.app/)  
 > ⚡ **Cloud Backend API**: Hosted on Render with automated self-ping keep-alive service.  
