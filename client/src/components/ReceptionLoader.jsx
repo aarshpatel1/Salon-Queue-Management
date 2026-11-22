@@ -22,7 +22,7 @@ export function ReceptionTableSkeleton({ count = 5 }) {
             <div className="w-8 h-8 rounded-full luxury-shimmer shrink-0 border border-[#E4DBD0]" />
 
             {/* Token Badge Skeleton */}
-            <div className="w-9 h-5 rounded-full luxury-shimmer shrink-0" />
+            <div className="w-10 h-6 rounded-full luxury-shimmer shrink-0" />
 
             {/* Customer Info Bars */}
             <div className="space-y-1.5 min-w-0">
@@ -33,10 +33,10 @@ export function ReceptionTableSkeleton({ count = 5 }) {
 
           <div className="flex items-center gap-2 shrink-0">
             {/* Preferred Stylist Tag */}
-            <div className="h-5 w-16 md:w-20 rounded-full luxury-shimmer hidden sm:block" />
+            <div className="h-6 w-20 md:w-24 rounded-full luxury-shimmer hidden sm:block" />
 
             {/* Wait Time Pill */}
-            <div className="h-5 w-12 rounded-full luxury-shimmer" />
+            <div className="h-6 w-14 rounded-full luxury-shimmer" />
 
             {/* Action Buttons Skeleton */}
             <div className="flex items-center gap-1">
@@ -111,7 +111,7 @@ export default function ReceptionLoader() {
                       <div className="h-3 w-16 rounded-full luxury-shimmer" />
                     </div>
                   </div>
-                  <div className="h-6 w-14 rounded-full luxury-shimmer" />
+                  <div className="h-7 w-20 rounded-full luxury-shimmer border border-[#E4DBD0]" />
                 </div>
 
                 <div className="p-3.5 rounded-[20px] bg-[#FFFFFF] border border-[#E4DBD0] space-y-2">

@@ -50,9 +50,18 @@ export default function BarberView() {
     }
   };
 
+  // Trigger full loader whenever the stylist changes (URL parameter `name`)
   useEffect(() => {
+    setLoading(true);
     fetchBarberData();
-  }, [name, lastSyncTime]);
+  }, [name]);
+
+  // Real-time socket sync updates: background refresh without triggering full loader
+  useEffect(() => {
+    if (!loading) {
+      fetchBarberData();
+    }
+  }, [lastSyncTime]);
 
   // Start Service ([ Start ] -> In chair)
   const handleStartService = async () => {
@@ -168,8 +177,11 @@ export default function BarberView() {
           {allBarbers.map((b) => (
             <button
               key={b._id}
-              onClick={() => navigate(`/barber/${encodeURIComponent(b.name)}`)}
-              className="px-4 py-2 rounded-full bg-[#1C1A18] text-[#F7F3EE] text-xs font-bold cursor-pointer"
+              onClick={() => {
+                setLoading(true);
+                navigate(`/barber/${encodeURIComponent(b.name)}`);
+              }}
+              className="px-5 py-2.5 rounded-full bg-[#1C1A18] hover:bg-[#4A4540] text-[#F7F3EE] text-xs font-bold cursor-pointer transition-colors shadow-xs"
             >
               {b.name}
             </button>
@@ -197,12 +209,12 @@ export default function BarberView() {
             <Icon icon="solar:scissors-bold" className="w-6 h-6 -rotate-45 text-[#C2B4A3]" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
               <h1 className="text-xl md:text-2xl font-black text-[#1C1A18] tracking-tight">
                 {barber.name}
               </h1>
               <span
-                className={`text-[9px] font-black px-2.5 py-0.5 rounded-full inline-block border ${
+                className={`px-4 py-2 rounded-full text-xs font-black border shadow-xs inline-flex items-center justify-center gap-1.5 shrink-0 ${
                   barber.status === 'Available'
                     ? 'bg-[#1C1A18] text-[#F7F3EE] border-[#1C1A18]'
                     : barber.status === 'Busy'
@@ -210,7 +222,16 @@ export default function BarberView() {
                     : 'bg-[#F7F3EE] text-[#4A4540] border-[#E4DBD0]'
                 }`}
               >
-                {barber.status}
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    barber.status === 'Available'
+                      ? 'bg-emerald-400 animate-pulse'
+                      : barber.status === 'Busy'
+                      ? 'bg-amber-400'
+                      : 'bg-stone-400'
+                  }`}
+                />
+                <span>{barber.status}</span>
               </span>
             </div>
             <p className="text-xs text-[#4A4540] font-medium mt-0.5">
@@ -225,7 +246,12 @@ export default function BarberView() {
             <CustomDropdown
               options={stylistOptions}
               value={barber.name}
-              onChange={(newName) => navigate(`/barber/${encodeURIComponent(newName)}`)}
+              onChange={(newName) => {
+                if (newName !== barber.name) {
+                  setLoading(true);
+                  navigate(`/barber/${encodeURIComponent(newName)}`);
+                }
+              }}
             />
           </div>
 
@@ -265,13 +291,18 @@ export default function BarberView() {
 
               {currentToken && (
                 <span
-                  className={`text-[10px] font-black px-3 py-1 rounded-full border ${
+                  className={`px-4 py-2 rounded-full text-xs font-black border shadow-xs inline-flex items-center justify-center gap-1.5 shrink-0 ${
                     isServing
                       ? 'bg-[#1C1A18] text-[#F7F3EE] border-[#1C1A18]'
                       : 'bg-[#E4DBD0] text-[#1C1A18] border-[#C2B4A3]'
                   }`}
                 >
-                  {currentToken.status}
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      isServing ? 'bg-emerald-400 animate-pulse' : 'bg-[#1C1A18] animate-ping'
+                    }`}
+                  />
+                  <span>{currentToken.status}</span>
                 </span>
               )}
             </div>
@@ -290,7 +321,7 @@ export default function BarberView() {
                       className="border border-[#C2B4A3] shrink-0"
                     />
                     <div className="min-w-0">
-                      <span className="text-xs font-black text-[#F7F3EE] bg-[#1C1A18] px-3 py-0.5 rounded-full inline-block mb-1.5">
+                      <span className="px-3.5 py-1 text-xs font-black text-[#F7F3EE] bg-[#1C1A18] rounded-full inline-flex items-center justify-center shadow-xs mb-1.5">
                         {currentToken.tokenNumber}
                       </span>
                       <h3 className="text-lg font-black text-[#1C1A18] truncate">
@@ -325,7 +356,7 @@ export default function BarberView() {
                     <button
                       onClick={handleMarkNoShow}
                       disabled={actionLoading}
-                      className="px-3.5 py-1.5 rounded-full text-[11px] font-bold bg-[#FFFFFF] border border-[#C2B4A3] text-[#4A4540] hover:text-[#ef4444] transition-colors cursor-pointer"
+                      className="px-4 py-2 rounded-full text-xs font-bold bg-[#FFFFFF] border border-[#C2B4A3] text-[#4A4540] hover:text-[#ef4444] transition-colors cursor-pointer shadow-xs inline-flex items-center justify-center"
                     >
                       No-Show
                     </button>
@@ -409,7 +440,7 @@ export default function BarberView() {
               </div>
             </div>
 
-            <span className="text-[11px] font-black uppercase tracking-wider text-[#1C1A18] bg-[#F7F3EE] px-4 py-2 rounded-full border border-[#E4DBD0]">
+            <span className="text-xs font-black uppercase tracking-wider text-[#1C1A18] bg-[#F7F3EE] px-5 py-2.5 rounded-full border border-[#E4DBD0] shadow-xs inline-flex items-center justify-center shrink-0">
               Mirror Station
             </span>
           </div>
@@ -418,13 +449,13 @@ export default function BarberView() {
         {/* Right Column (Next Up & Full Live Queue Side-by-Side Cards) */}
         <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-4">
           {/* Up Next For You Card */}
-          <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-3.5 animate-fade-in-scale stagger-2">
+          <div className="bg-[#FFFFFF] rounded-[28px] sm:rounded-[36px] p-4 sm:p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-3.5 animate-fade-in-scale stagger-2">
             <div className="flex items-center justify-between pb-2 mb-1">
               <h3 className="text-xs font-black text-[#1C1A18] uppercase tracking-wider flex items-center gap-2">
                 <Icon icon="solar:user-bold" className="w-4 h-4 text-[#1C1A18]" />
                 <span>Next Specific Request For You</span>
               </h3>
-              <span className="text-[10px] font-black text-[#1C1A18] bg-[#E4DBD0] px-2.5 py-0.5 rounded-full border border-[#C2B4A3]">
+              <span className="text-xs font-black text-[#1C1A18] bg-[#E4DBD0] px-4 py-1.5 rounded-full border border-[#C2B4A3] shadow-xs inline-flex items-center justify-center shrink-0">
                 Priority
               </span>
             </div>
@@ -432,20 +463,20 @@ export default function BarberView() {
             {nextForYou ? (
               <div
                 onClick={() => setSelectedProfileToken(nextForYou)}
-                className="p-4 rounded-[24px] bg-[#F7F3EE] border border-[#E4DBD0] flex items-center justify-between cursor-pointer hover:border-[#1C1A18] transition-colors"
+                className="p-3.5 sm:p-4 rounded-[24px] bg-[#F7F3EE] border border-[#E4DBD0] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 cursor-pointer hover:border-[#1C1A18] transition-colors"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-xs font-black text-[#F7F3EE] bg-[#1C1A18] px-3 py-1 rounded-full shrink-0">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <span className="text-xs font-black text-[#F7F3EE] bg-[#1C1A18] px-3.5 py-1.5 rounded-full shrink-0 shadow-xs inline-flex items-center justify-center min-w-[36px]">
                     {nextForYou.tokenNumber}
                   </span>
                   <Avatar
                     src={nextForYou.avatar}
                     name={nextForYou.customerName}
-                    size="w-8 h-8 text-[11px]"
+                    size="w-9 h-9 text-xs"
                     className="border border-[#C2B4A3] shrink-0"
                   />
-                  <div className="min-w-0">
-                    <p className="text-xs font-black text-[#1C1A18] truncate">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-black text-[#1C1A18] truncate">
                       {nextForYou.customerName}
                     </p>
                     <p className="text-[10px] text-[#4A4540] truncate">
@@ -453,9 +484,11 @@ export default function BarberView() {
                     </p>
                   </div>
                 </div>
-                <span className="text-[11px] font-black text-[#1C1A18] bg-[#FFFFFF] px-3 py-1 rounded-full border border-[#E4DBD0] shrink-0">
-                  ~{nextForYou.totalDuration}m
-                </span>
+                <div className="flex items-center justify-end pt-1 sm:pt-0">
+                  <span className="text-xs font-black text-[#1C1A18] bg-[#FFFFFF] px-4 py-2 rounded-full border border-[#E4DBD0] shadow-xs inline-flex items-center justify-center shrink-0">
+                    ~{nextForYou.totalDuration}m
+                  </span>
+                </div>
               </div>
             ) : (
               <div className="p-4 rounded-[24px] bg-[#F7F3EE]/50 border border-dashed border-[#E4DBD0] text-center">
@@ -466,13 +499,13 @@ export default function BarberView() {
           </div>
 
           {/* Full Salon Waiting Queue List */}
-          <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-3.5 animate-fade-in-scale stagger-4">
+          <div className="bg-[#FFFFFF] rounded-[28px] sm:rounded-[36px] p-4 sm:p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-3.5 animate-fade-in-scale stagger-4">
             <div className="flex items-center justify-between pb-2 mb-1">
               <h3 className="text-xs font-black text-[#1C1A18] uppercase tracking-wider flex items-center gap-2">
                 <Icon icon="solar:clock-circle-bold" className="w-4 h-4 text-[#1C1A18]" />
-                <span>Live Salon Queue ({allWaiting.length})</span>
+                <span>Live Station Queue ({allWaiting.length})</span>
               </h3>
-              <span className="text-[10px] font-black text-[#1C1A18] bg-[#E4DBD0] px-2.5 py-0.5 rounded-full border border-[#C2B4A3]">
+              <span className="text-xs font-black text-[#1C1A18] bg-[#E4DBD0] px-4 py-1.5 rounded-full border border-[#C2B4A3] shadow-xs inline-flex items-center justify-center shrink-0">
                 FCFS
               </span>
             </div>
@@ -485,38 +518,54 @@ export default function BarberView() {
                 <p className="text-xs font-bold">No clients currently waiting</p>
               </div>
             ) : (
-              <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin">
-                {allWaiting.map((token, index) => {
+              <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin">
+                {allWaiting.map((token) => {
                   const isPrefCurrent = token.preferredBarber === barber._id || token.preferredBarberName === barber.name;
                   return (
                     <div
                       key={token._id}
                       onClick={() => setSelectedProfileToken(token)}
-                      className={`p-3 rounded-full border flex items-center justify-between text-xs cursor-pointer transition-all px-4 ${
+                      className={`p-3 sm:py-2.5 sm:px-4 rounded-2xl sm:rounded-full border transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 ${
                         isPrefCurrent
-                          ? 'border-[#1C1A18] bg-[#E4DBD0]/50'
+                          ? 'border-[#1C1A18] bg-[#E4DBD0]/50 shadow-xs'
                           : 'border-[#E4DBD0] bg-[#FFFFFF] hover:border-[#1C1A18]'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="text-xs font-black text-[#F7F3EE] bg-[#1C1A18] px-2.5 py-0.5 rounded-full shrink-0">
+                      {/* Left Side: Token, Avatar, Name & Services */}
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <span className="text-xs font-black text-[#F7F3EE] bg-[#1C1A18] px-3.5 py-1.5 rounded-full shrink-0 shadow-xs inline-flex items-center justify-center min-w-[36px]">
                           {token.tokenNumber}
                         </span>
                         <Avatar
                           src={token.avatar}
                           name={token.customerName}
-                          size="w-7 h-7 text-[10px]"
+                          size="w-8 h-8 text-[11px]"
                           className="border border-[#C2B4A3] shrink-0"
                         />
-                        <span className="font-bold text-[#1C1A18] truncate max-w-[110px]">
-                          {token.customerName}
-                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-xs sm:text-sm text-[#1C1A18] truncate">
+                            {token.customerName}
+                          </p>
+                          {token.services && token.services.length > 0 && (
+                            <p className="text-[10px] text-[#4A4540] truncate sm:hidden">
+                              {token.services.map((s) => s.name).join(', ')}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[10px] text-[#4A4540]">
-                          Pref: {token.preferredBarberName || 'Any'}
+
+                      {/* Right Side: Preference & Duration Badges */}
+                      <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-1.5 sm:pt-0 border-t border-[#E4DBD0]/50 sm:border-0">
+                        <span
+                          className={`px-3.5 py-1.5 text-xs font-bold rounded-full border shadow-xs inline-flex items-center justify-center ${
+                            isPrefCurrent
+                              ? 'bg-[#1C1A18] text-[#F7F3EE] border-[#1C1A18]'
+                              : 'bg-[#F7F3EE] text-[#4A4540] border-[#E4DBD0]'
+                          }`}
+                        >
+                          {token.preferredBarberName ? `Pref: ${token.preferredBarberName}` : 'Any Stylist'}
                         </span>
-                        <span className="text-[10px] font-bold text-[#1C1A18] bg-[#F7F3EE] px-2 py-0.5 rounded-full border border-[#E4DBD0]">
+                        <span className="px-3.5 py-1.5 text-xs font-black text-[#1C1A18] bg-[#FFFFFF] sm:bg-[#F7F3EE] rounded-full border border-[#E4DBD0] shadow-xs inline-flex items-center justify-center shrink-0">
                           ~{token.totalDuration}m
                         </span>
                       </div>

@@ -330,7 +330,7 @@ export default function Reception() {
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-black text-[#1C1A18] truncate">{barber.name}</p>
                         <span
-                          className={`text-[9px] font-black px-2.5 py-0.5 rounded-full inline-block border ${
+                          className={`px-3.5 py-1 text-xs font-black rounded-full inline-flex items-center justify-center border shadow-xs mt-1 ${
                             isServing
                               ? 'bg-[#1C1A18] text-[#F7F3EE] border-[#1C1A18]'
                               : isCalled
@@ -349,7 +349,7 @@ export default function Reception() {
                     {hasCustomer ? (
                       <div className="p-3.5 rounded-[24px] bg-[#F7F3EE] border border-[#E4DBD0] mb-3 space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-black text-[#1C1A18] bg-white px-2.5 py-0.5 rounded-full border border-[#E4DBD0]">
+                          <span className="text-xs font-black text-[#1C1A18] bg-white px-3 py-1 rounded-full border border-[#E4DBD0] shadow-xs inline-flex items-center justify-center">
                             {currentCust.tokenNumber}
                           </span>
                           <span className="text-[11px] font-bold text-[#1C1A18] truncate max-w-[100px]">
@@ -447,7 +447,7 @@ export default function Reception() {
                 Drag & drop to rearrange • Click to view • Edit & manage
               </p>
             </div>
-            <span className="text-[10px] font-black text-[#1C1A18] bg-[#E4DBD0] px-3 py-1 rounded-full border border-[#C2B4A3]">
+            <span className="text-xs font-black text-[#1C1A18] bg-[#E4DBD0] px-4 py-1.5 rounded-full border border-[#C2B4A3] shadow-xs inline-flex items-center justify-center">
               Drag & Reorder
             </span>
           </div>
@@ -503,7 +503,7 @@ export default function Reception() {
                       <Avatar src={item.avatar} name={item.customerName} size="sm" />
 
                       {/* Token Number */}
-                      <span className="text-xs font-black text-[#F7F3EE] bg-[#1C1A18] px-2.5 py-0.5 rounded-full shrink-0">
+                      <span className="px-3.5 py-1 text-xs font-black text-[#F7F3EE] bg-[#1C1A18] rounded-full shrink-0 shadow-xs inline-flex items-center justify-center min-w-[36px]">
                         {item.tokenNumber}
                       </span>
 
