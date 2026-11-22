@@ -358,39 +358,39 @@ export default function DynamicIsland() {
                 </div>
               </div>
             )}
-          </div>
 
-          {/* Bottom Actions Area */}
-          <div className="space-y-2 pt-3 shrink-0">
-            {isDone ? (
-              <button
-                type="button"
-                onClick={handleDismiss}
-                className="w-full py-2.5 rounded-full bg-[#F7F3EE] text-[#1C1A18] font-bold text-xs hover:bg-[#E4DBD0] transition-colors cursor-pointer"
-              >
-                Clear Completed Ticket
-              </button>
-            ) : (
-              <>
+            {/* Bottom Actions Area: Directly attached with compact gap */}
+            <div className="space-y-2 pt-1 shrink-0">
+              {isDone ? (
                 <button
                   type="button"
-                  onClick={handleCollapse}
-                  className="w-full py-2.5 rounded-full bg-[#F7F3EE] text-[#1C1A18] font-bold text-xs hover:bg-[#E4DBD0] transition-colors cursor-pointer"
+                  onClick={handleDismiss}
+                  className="w-full py-2.5 rounded-full bg-[#F7F3EE] text-[#1C1A18] font-bold text-xs hover:bg-[#E4DBD0] transition-colors cursor-pointer shadow-xs"
                 >
-                  Minimize to Bottom Bar
+                  Clear Completed Ticket
                 </button>
-                {!showOptOutConfirm && ['Waiting', 'Called'].includes(token.status) && (
+              ) : (
+                <>
                   <button
                     type="button"
-                    onClick={() => setShowOptOutConfirm(true)}
-                    className="w-full py-2 rounded-full border border-[#ef4444]/40 bg-[#ef4444]/10 hover:bg-[#ef4444]/20 text-[#ef4444] font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    onClick={handleCollapse}
+                    className="w-full py-2.5 rounded-full bg-[#F7F3EE] text-[#1C1A18] font-bold text-xs hover:bg-[#E4DBD0] transition-colors cursor-pointer shadow-xs"
                   >
-                    <Icon icon="solar:close-circle-bold" className="w-4 h-4" />
-                    <span>Opt Out / Cancel My Turn</span>
+                    Minimize to Bottom Bar
                   </button>
-                )}
-              </>
-            )}
+                  {!showOptOutConfirm && ['Waiting', 'Called'].includes(token.status) && (
+                    <button
+                      type="button"
+                      onClick={() => setShowOptOutConfirm(true)}
+                      className="w-full py-2 rounded-full border border-[#ef4444]/40 bg-[#ef4444]/10 hover:bg-[#ef4444]/20 text-[#ef4444] font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Icon icon="solar:close-circle-bold" className="w-4 h-4" />
+                      <span>Opt Out / Cancel My Turn</span>
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
