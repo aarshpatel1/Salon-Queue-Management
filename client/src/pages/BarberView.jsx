@@ -194,7 +194,7 @@ export default function BarberView() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto select-none py-1">
       {/* Top Header Capsule Bar */}
-      <div className="bg-[#FFFFFF] rounded-[32px] p-5 md:p-6 border border-[#E4DBD0] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-[#FFFFFF] rounded-[32px] p-5 md:p-6 border border-[#E4DBD0] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in-scale stagger-1">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-[#1C1A18] text-[#F7F3EE] flex items-center justify-center shrink-0 shadow-md">
             <Icon icon="solar:scissors-bold" className="w-6 h-6 -rotate-45 text-[#C2B4A3]" />
@@ -252,7 +252,7 @@ export default function BarberView() {
         {/* Left Column (Primary Chair Session & Stylist Details) */}
         <div className="lg:col-span-7 space-y-6">
           {/* Active Customer in Chair or Called Capsule */}
-          <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-5">
+          <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-5 animate-fade-in-up stagger-2">
             <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-3.5">
               <div className="flex items-center gap-2.5">
                 <span className="w-8 h-8 rounded-full bg-[#1C1A18] text-[#F7F3EE] flex items-center justify-center">
@@ -387,7 +387,7 @@ export default function BarberView() {
           </div>
 
           {/* Stylist Profile Card */}
-          <div className="bg-[#FFFFFF] rounded-[36px] p-6 border border-[#E4DBD0] shadow-xs flex items-center justify-between gap-4">
+          <div className="bg-[#FFFFFF] rounded-[36px] p-6 border border-[#E4DBD0] shadow-xs flex items-center justify-between gap-4 animate-fade-in-up stagger-3">
             <div className="flex items-center gap-3.5">
               <img
                 src={barber.avatar}
@@ -412,7 +412,7 @@ export default function BarberView() {
         {/* Right Column (Next Up & Full Live Queue Side-by-Side Cards) */}
         <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-4">
           {/* Up Next For You Card */}
-          <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-3.5">
+          <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-3.5 animate-fade-in-scale stagger-2">
             <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-3">
               <h3 className="text-xs font-black text-[#1C1A18] uppercase tracking-wider flex items-center gap-2">
                 <Icon icon="solar:user-bold" className="w-4 h-4 text-[#1C1A18]" />
@@ -454,7 +454,7 @@ export default function BarberView() {
           </div>
 
           {/* Full Salon Waiting Queue List */}
-          <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-3.5">
+          <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-3.5 animate-fade-in-scale stagger-4">
             <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-3">
               <h3 className="text-xs font-black text-[#1C1A18] uppercase tracking-wider flex items-center gap-2">
                 <Icon icon="solar:clock-circle-bold" className="w-4 h-4 text-[#1C1A18]" />

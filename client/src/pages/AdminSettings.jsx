@@ -156,7 +156,7 @@ export default function AdminSettings() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto select-none py-1">
       {/* Top Header Capsule Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-[#FFFFFF] p-5 md:p-6 rounded-[32px] border border-[#E4DBD0] shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-[#FFFFFF] p-5 md:p-6 rounded-[32px] border border-[#E4DBD0] shadow-xs animate-fade-in-scale stagger-1">
         <div className="flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-full bg-[#1C1A18] text-[#F7F3EE] flex items-center justify-center shadow-md">
             <Icon icon="solar:settings-bold" className="w-6 h-6 text-[#C2B4A3]" />
@@ -189,7 +189,7 @@ export default function AdminSettings() {
       </div>
 
       {/* KPI Stats Cards in Pill Shapes */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up stagger-2">
         {/* KPI 1 */}
         <div className="bg-[#FFFFFF] p-5 rounded-[28px] border border-[#E4DBD0] shadow-xs">
           <div className="flex items-center justify-between">
@@ -270,7 +270,7 @@ export default function AdminSettings() {
       {/* Main Grid: Service Manager & Staff On Duty */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Service Manager */}
-        <div className="lg:col-span-7 bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-4">
+        <div className="lg:col-span-7 bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-4 animate-fade-in-up stagger-3">
           <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-3">
             <div>
               <h2 className="text-base font-black text-[#1C1A18] flex items-center gap-2">
@@ -342,7 +342,7 @@ export default function AdminSettings() {
         </div>
 
         {/* Right: Barbers on duty today toggles */}
-        <div className="lg:col-span-5 bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-4">
+        <div className="lg:col-span-5 bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-4 animate-fade-in-up stagger-4">
           <div className="border-b border-[#E4DBD0] pb-3">
             <h2 className="text-base font-black text-[#1C1A18] flex items-center gap-2">
               <Icon icon="solar:users-group-rounded-bold" className="w-5 h-5 text-[#4A4540]" />
@@ -386,7 +386,7 @@ export default function AdminSettings() {
       </div>
 
       {/* Salon General Configurations & Cloudinary Image Upload in Pill Card */}
-      <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-5">
+      <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-5 animate-fade-in-up stagger-5">
         <div className="border-b border-[#E4DBD0] pb-3">
           <h2 className="text-base font-black text-[#1C1A18] flex items-center gap-2">
             <Icon icon="solar:shield-check-bold" className="w-5 h-5 text-[#4A4540]" />

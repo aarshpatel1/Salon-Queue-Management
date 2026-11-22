@@ -10,6 +10,7 @@ export default function DynamicIsland() {
   const [tokenId, setTokenId] = useState(() => localStorage.getItem('elan_active_token_id'));
   const [tokenData, setTokenData] = useState(null);
   const [expanded, setExpanded] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
   // 1-second live ticker for smooth countdown and elapsed timer
@@ -56,6 +57,18 @@ export default function DynamicIsland() {
     fetchTokenStatus();
   }, [tokenId, lastSyncTime]);
 
+  // Escape key handler for smoothly collapsing the modal
+  useEffect(() => {
+    if (!expanded) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        handleCollapse();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [expanded]);
+
   if (!tokenId || !tokenData || !tokenData.token) return null;
 
   const token = tokenData.token;
@@ -72,7 +85,6 @@ export default function DynamicIsland() {
     if (diffSec > 0) {
       waitTimerSeconds = diffSec;
     } else {
-      // If estimated duration passed, show elapsed time since joined
       const elapsedSec = Math.max(0, Math.floor((currentTime - joinedMs) / 1000));
       waitTimerSeconds = elapsedSec;
     }
@@ -84,21 +96,43 @@ export default function DynamicIsland() {
     inChairSeconds = Math.max(0, Math.floor((currentTime - new Date(token.startedAt).getTime()) / 1000));
   }
 
+  // Smooth collapse back to bottom pill
+  const handleCollapse = () => {
+    if (isClosing) return;
+    setIsClosing(true);
+    setTimeout(() => {
+      setExpanded(false);
+      setIsClosing(false);
+    }, 260);
+  };
+
+  const handleOpen = () => {
+    setIsClosing(false);
+    setExpanded(true);
+  };
+
   const handleDismiss = (e) => {
     e.stopPropagation();
     localStorage.removeItem('elan_active_token_id');
     setTokenId(null);
     setTokenData(null);
     setExpanded(false);
+    setIsClosing(false);
   };
 
   return (
     <>
       {/* Floating Status Bar at Bottom Center of the Section (Without Sidebar) */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 select-none pointer-events-auto">
+      <div
+        className={`absolute bottom-6 left-1/2 -translate-x-1/2 z-40 select-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          expanded
+            ? 'opacity-0 scale-75 pointer-events-none translate-y-4'
+            : 'opacity-100 scale-100 pointer-events-auto translate-y-0 animate-pill-spring'
+        }`}
+      >
         <div
-          onClick={() => setExpanded(true)}
-          className="flex items-center gap-3.5 px-5 py-2.5 bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] rounded-full shadow-2xl cursor-pointer hover:border-[#C2B4A3] transition-all transform hover:-translate-y-0.5 active:scale-98"
+          onClick={handleOpen}
+          className="flex items-center gap-3.5 px-5 py-2.5 bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] rounded-full shadow-2xl cursor-pointer hover:border-[#C2B4A3] transition-all transform hover:-translate-y-0.5 active:scale-95"
         >
           {/* Pulsing Status Dot */}
           <span className="relative flex h-3 w-3 shrink-0">
@@ -182,14 +216,18 @@ export default function DynamicIsland() {
         </div>
       </div>
 
-      {/* Expanded Live Queue Ticket Modal */}
-      {expanded && (
+      {/* Expanded Live Queue Ticket Modal with Fluid Transformation */}
+      {(expanded || isClosing) && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-transparent select-none animate-in fade-in duration-200"
-          onClick={() => setExpanded(false)}
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-transparent select-none transition-opacity duration-250 ease-out ${
+            isClosing ? 'opacity-0' : 'opacity-100 animate-in fade-in duration-200'
+          }`}
+          onClick={handleCollapse}
         >
           <div
-            className="w-full max-w-md rounded-[36px] bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200"
+            className={`w-full max-w-md rounded-[36px] bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] p-6 shadow-2xl space-y-5 ${
+              isClosing ? 'animate-island-collapse' : 'animate-island-expand'
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with Ticket Title */}
@@ -207,7 +245,7 @@ export default function DynamicIsland() {
               </div>
 
               <button
-                onClick={() => setExpanded(false)}
+                onClick={handleCollapse}
                 className="w-8 h-8 rounded-full bg-[#4A4540]/40 text-[#C2B4A3] hover:text-[#F7F3EE] flex items-center justify-center cursor-pointer transition-colors"
               >
                 <Icon icon="solar:close-circle-bold" className="w-5 h-5" />
@@ -315,7 +353,7 @@ export default function DynamicIsland() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => setExpanded(false)}
+                  onClick={handleCollapse}
                   className="w-full py-3 rounded-full bg-[#F7F3EE] text-[#1C1A18] font-bold text-xs hover:bg-[#E4DBD0] transition-colors cursor-pointer"
                 >
                   Minimize to Bottom Bar

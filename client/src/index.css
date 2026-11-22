@@ -16,8 +16,13 @@
   --color-5: #1C1A18;
 }
 
-*{
+html, body {
+  scroll-behavior: smooth;
+}
+
+* {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  scroll-behavior: smooth;
 }
 
 @layer base {
@@ -142,3 +147,103 @@ aside::-webkit-scrollbar-thumb:hover {
 .animate-island-pulse {
   animation: islandPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Dynamic Island Fluid Morph Transitions */
+@keyframes dynamicIslandExpand {
+  0% {
+    opacity: 0;
+    transform: translateY(90px) scale(0.65);
+    border-radius: 9999px;
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1.02);
+    border-radius: 40px;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    border-radius: 36px;
+  }
+}
+
+@keyframes dynamicIslandCollapse {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    border-radius: 36px;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(90px) scale(0.65);
+    border-radius: 9999px;
+  }
+}
+
+@keyframes dynamicPillSpring {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.85);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-island-expand {
+  animation: dynamicIslandExpand 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-island-collapse {
+  animation: dynamicIslandCollapse 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pill-spring {
+  animation: dynamicPillSpring 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Staggered On-Load Entrance Animations for All Elements */
+@keyframes elementFadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes elementFadeInScale {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: elementFadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade-in-scale {
+  animation: elementFadeInScale 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
+.stagger-6 { animation-delay: 300ms; }
+.stagger-7 { animation-delay: 350ms; }
+.stagger-8 { animation-delay: 400ms; }
+

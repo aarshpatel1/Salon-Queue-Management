@@ -152,9 +152,9 @@ export default function PinModal() {
           <p className="text-xs text-[#4A4540] mt-1 font-medium">
             Enter 4-digit PIN to unlock console
           </p>
-          <div className="mt-2 text-[10px] font-black text-[#1C1A18] bg-[#E4DBD0] px-3.5 py-1 rounded-full border border-[#C2B4A3]">
+          {/* <div className="mt-2 text-[10px] font-black text-[#1C1A18] bg-[#E4DBD0] px-3.5 py-1 rounded-full border border-[#C2B4A3]">
             Default Studio PIN: 1234
-          </div>
+          </div> */}
         </div>
 
         {error && (

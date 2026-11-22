@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from '@iconify/react';
 
@@ -23,9 +23,9 @@ export default function CustomDropdown({
 
   const selectedOption = options.find((opt) => opt.value === value);
 
-  // Compute precise viewport coordinates and auto-flip placement
-  const updatePosition = useCallback(() => {
-    if (!triggerRef.current) return;
+  // Compute precise viewport coordinates and auto-flip placement synchronously
+  const computePosition = useCallback(() => {
+    if (!triggerRef.current) return null;
     const rect = triggerRef.current.getBoundingClientRect();
     const dropdownHeight = 220;
     const gap = 6;
@@ -55,26 +55,37 @@ export default function CustomDropdown({
       top = rect.bottom + gap;
     }
 
-    setCoords({
+    return {
       top,
       left,
       width,
       placement: openAbove ? 'top' : 'bottom',
       maxHeight
-    });
+    };
   }, []);
 
-  useLayoutEffect(() => {
-    if (isOpen) {
-      updatePosition();
+  const handleToggle = () => {
+    if (!isOpen) {
+      // Synchronously compute position BEFORE opening so it never mounts at (0, 0)
+      const nextCoords = computePosition();
+      if (nextCoords) {
+        setCoords(nextCoords);
+      }
+      setIsOpen(true);
+    } else {
+      setIsOpen(false);
     }
-  }, [isOpen, updatePosition]);
+  };
 
+  // Re-sync position on window scroll or resize
   useEffect(() => {
     if (!isOpen) return;
 
     const handleScrollOrResize = () => {
-      updatePosition();
+      const updated = computePosition();
+      if (updated) {
+        setCoords(updated);
+      }
     };
 
     const handleOutsideClick = (e) => {
@@ -94,7 +105,6 @@ export default function CustomDropdown({
       }
     };
 
-    // Use capturing phase so internal modal or parent scrolling updates coordinates instantly
     window.addEventListener('scroll', handleScrollOrResize, true);
     window.addEventListener('resize', handleScrollOrResize);
     document.addEventListener('mousedown', handleOutsideClick);
@@ -106,7 +116,7 @@ export default function CustomDropdown({
       document.removeEventListener('mousedown', handleOutsideClick);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, updatePosition]);
+  }, [isOpen, computePosition]);
 
   return (
     <div className={`relative ${className}`}>
@@ -120,8 +130,8 @@ export default function CustomDropdown({
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="w-full flex items-center justify-between px-4 py-2.5 bg-[#FFFFFF] border border-[#E4DBD0] rounded-full text-xs font-bold text-[#1C1A18] hover:border-[#C2B4A3] transition-colors cursor-pointer text-left shadow-xs"
+        onClick={handleToggle}
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-[#FFFFFF] border border-[#E4DBD0] rounded-full text-xs font-bold text-[#1C1A18] hover:border-[#C2B4A3] transition-all cursor-pointer text-left shadow-xs active:scale-98"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
@@ -130,12 +140,13 @@ export default function CustomDropdown({
         </span>
         <Icon
           icon={isOpen ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear'}
-          className="w-4 h-4 text-[#4A4540] shrink-0 ml-2"
+          className="w-4 h-4 text-[#4A4540] shrink-0 ml-2 transition-transform duration-200"
         />
       </button>
 
       {/* Overlay Dropdown Menu rendered via Portal into document.body */}
       {isOpen &&
+        coords.width > 0 &&
         typeof document !== 'undefined' &&
         createPortal(
           <div
@@ -146,11 +157,12 @@ export default function CustomDropdown({
               left: `${coords.left}px`,
               width: `${coords.width}px`,
               transform: coords.placement === 'top' ? 'translateY(-100%)' : 'none',
+              transformOrigin: coords.placement === 'top' ? 'bottom center' : 'top center',
               maxHeight: `${coords.maxHeight}px`,
               zIndex: 9999
             }}
             role="listbox"
-            className="bg-[#FFFFFF] border border-[#E4DBD0] rounded-[24px] shadow-2xl p-1.5 overflow-y-auto scrollbar-thin space-y-1 animate-in fade-in zoom-in-95 duration-100"
+            className="bg-[#FFFFFF] border border-[#E4DBD0] rounded-[24px] shadow-2xl p-1.5 overflow-y-auto scrollbar-thin space-y-1 animate-in fade-in zoom-in-95 duration-150 ease-out"
           >
             {options.map((opt) => {
               const isSelected = opt.value === value;
@@ -164,9 +176,9 @@ export default function CustomDropdown({
                     onChange(opt.value);
                     setIsOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3.5 py-2 text-xs rounded-full transition-colors cursor-pointer text-left ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2 text-xs rounded-full transition-all cursor-pointer text-left ${
                     isSelected
-                      ? 'bg-[#1C1A18] text-[#F7F3EE] font-bold'
+                      ? 'bg-[#1C1A18] text-[#F7F3EE] font-bold shadow-xs'
                       : 'text-[#1C1A18] hover:bg-[#F7F3EE]'
                   }`}
                 >

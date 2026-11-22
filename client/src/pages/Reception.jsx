@@ -177,7 +177,7 @@ export default function Reception() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto select-none py-1">
       {/* Top Header Capsule Bar for Reception */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-[#FFFFFF] p-5 md:p-6 rounded-[32px] border border-[#E4DBD0] shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-[#FFFFFF] p-5 md:p-6 rounded-[32px] border border-[#E4DBD0] shadow-xs animate-fade-in-scale stagger-1">
         <div className="flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-full bg-[#1C1A18] text-[#F7F3EE] flex items-center justify-center shadow-md">
             <Icon icon="solar:calendar-bold" className="w-6 h-6 text-[#C2B4A3]" />
@@ -206,7 +206,7 @@ export default function Reception() {
       {/* Main Tablet Layout: 2 Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Stylist Stations (with Real-Time Timelines in Pills) */}
-        <div className="lg:col-span-7 space-y-4">
+        <div className="lg:col-span-7 space-y-4 animate-fade-in-up stagger-2">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-black text-[#1C1A18] flex items-center gap-2">
               <Icon icon="solar:scissors-bold" className="w-5 h-5 text-[#4A4540]" />
@@ -350,7 +350,7 @@ export default function Reception() {
         </div>
 
         {/* Right Column: Ordered Waiting Queue (Pill Shapes) */}
-        <div className="lg:col-span-5 bg-[#FFFFFF] rounded-[36px] p-6 border border-[#E4DBD0] shadow-xs space-y-4">
+        <div className="lg:col-span-5 bg-[#FFFFFF] rounded-[36px] p-6 border border-[#E4DBD0] shadow-xs space-y-4 animate-fade-in-up stagger-3">
           <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-3">
             <div>
               <h2 className="text-base font-black text-[#1C1A18] flex items-center gap-2">

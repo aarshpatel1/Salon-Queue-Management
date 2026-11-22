@@ -111,7 +111,7 @@ export default function MyStatus() {
   return (
     <div className="space-y-5 max-w-lg mx-auto select-none py-1">
       {/* Top Navigation Pill */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between animate-fade-in-scale stagger-1">
         <NavLink
           to="/"
           className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1C1A18] bg-[#FFFFFF] px-4 py-2 rounded-full border border-[#E4DBD0] shadow-xs"
@@ -127,7 +127,7 @@ export default function MyStatus() {
 
       {/* 2nd in Line Warning Capsule Banner */}
       {isSecondInLine && (
-        <div className="p-4 rounded-full bg-[#E4DBD0] text-[#1C1A18] border border-[#C2B4A3] shadow-xs flex items-center gap-3 px-5">
+        <div className="p-4 rounded-full bg-[#E4DBD0] text-[#1C1A18] border border-[#C2B4A3] shadow-xs flex items-center gap-3 px-5 animate-fade-in-up stagger-2">
           <Icon icon="solar:bell-bold" className="w-5 h-5 shrink-0 text-[#1C1A18]" />
           <div className="text-xs">
             <p className="font-black uppercase tracking-wide">You're 2nd in line!</p>
@@ -140,7 +140,7 @@ export default function MyStatus() {
 
       {/* CALLED TO CHAIR ALERT PILL BANNER */}
       {isCalled && (
-        <div className="p-5 rounded-[32px] bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] shadow-xl flex items-center gap-4">
+        <div className="p-5 rounded-[32px] bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] shadow-xl flex items-center gap-4 animate-fade-in-up stagger-2">
           <div className="w-12 h-12 rounded-full bg-[#F7F3EE] text-[#1C1A18] flex items-center justify-center shrink-0">
             <Icon icon="solar:scissors-bold" className="w-6 h-6 text-[#1C1A18]" />
           </div>
@@ -158,7 +158,7 @@ export default function MyStatus() {
 
       {/* IN CHAIR REAL-TIME TIMELINE BANNER */}
       {isInChair && (
-        <div className="p-6 rounded-[32px] bg-[#FFFFFF] border border-[#1C1A18] shadow-md space-y-3">
+        <div className="p-6 rounded-[32px] bg-[#FFFFFF] border border-[#1C1A18] shadow-md space-y-3 animate-fade-in-up stagger-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e] animate-pulse"></span>
@@ -183,7 +183,7 @@ export default function MyStatus() {
 
       {/* COMPLETED BANNER */}
       {isDone && (
-        <div className="p-6 rounded-[32px] bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] text-center space-y-2">
+        <div className="p-6 rounded-[32px] bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] text-center space-y-2 animate-fade-in-up stagger-2">
           <Icon icon="solar:check-circle-bold" className="w-10 h-10 text-[#C2B4A3] mx-auto" />
           <h3 className="text-base font-bold">Session Completed</h3>
           <p className="text-xs text-[#E4DBD0]">
@@ -193,7 +193,7 @@ export default function MyStatus() {
       )}
 
       {/* Main Digital Ticket Capsule Card */}
-      <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-5">
+      <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-5 animate-fade-in-up stagger-3">
         <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-4">
           <div>
             <span className="text-[10px] uppercase font-bold tracking-widest text-[#4A4540]">

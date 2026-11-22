@@ -143,9 +143,9 @@ export default function JoinQueue() {
   };
 
   return (
-    <div className="py-2 px-2 md:px-4 max-w-6xl mx-auto select-none space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto select-none py-1">
       {/* Top Navigation Pill & Status Badge */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between animate-fade-in-up stagger-1">
         <NavLink
           to="/"
           className="inline-flex items-center gap-2 text-xs font-bold text-[#1C1A18] bg-[#FFFFFF] hover:bg-[#E4DBD0] px-4 py-2 rounded-full transition-all border border-[#E4DBD0] shadow-xs"
@@ -160,7 +160,7 @@ export default function JoinQueue() {
       </div>
 
       {/* Header Capsule Banner */}
-      <div className="bg-[#FFFFFF] rounded-[32px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-[#FFFFFF] rounded-[32px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in-scale stagger-2">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-[#1C1A18] text-[#F7F3EE] flex items-center justify-center shrink-0 shadow-md">
             <Icon icon="solar:scissors-bold" className="w-6 h-6 -rotate-45 text-[#C2B4A3]" />
@@ -187,7 +187,7 @@ export default function JoinQueue() {
 
       {/* Notice if Online Queue is Closed */}
       {!isOnlineAllowed && (
-        <div className="p-4 rounded-full bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] flex items-center gap-3 px-6 shadow-md">
+        <div className="p-4 rounded-full bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] flex items-center gap-3 px-6 shadow-md animate-fade-in-up">
           <Icon icon="solar:danger-triangle-bold" className="w-5 h-5 text-[#C2B4A3] shrink-0" />
           <p className="text-xs font-semibold">
             {joiningNotice || 'Online queue entry is closed. Walk-ins are accepted at reception.'}
@@ -196,11 +196,11 @@ export default function JoinQueue() {
       )}
 
       {/* Responsive Layout for Laptop/Desktop (2-Column Grid) and Mobile (Stacked) */}
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column (Form Inputs: Steps 1, 2, 3) */}
         <div className="lg:col-span-7 space-y-6">
           {/* Step 1: Customer Information in Pill Card */}
-          <div className="bg-[#FFFFFF] rounded-[32px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-4">
+          <div className="bg-[#FFFFFF] rounded-[32px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-4 animate-fade-in-up stagger-3">
             <div className="flex items-center gap-2.5 border-b border-[#E4DBD0] pb-3">
               <span className="w-6 h-6 rounded-full bg-[#1C1A18] text-[#F7F3EE] text-[11px] font-black flex items-center justify-center">
                 1
@@ -210,7 +210,7 @@ export default function JoinQueue() {
               </h2>
             </div>
 
-            <div className="space-y-3.5 pt-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
               <div>
                 <label className="block text-[11px] font-bold text-[#4A4540] uppercase tracking-wider mb-1.5 pl-3">
                   Full Name *
@@ -240,14 +240,14 @@ export default function JoinQueue() {
                   className="w-full px-5 py-3 bg-[#F7F3EE] border border-[#E4DBD0] rounded-full text-xs font-medium text-[#1C1A18] placeholder-[#4A4540]/50 focus:outline-none focus:border-[#1C1A18] focus:bg-white transition-all shadow-inner"
                 />
                 <p className="text-[10px] text-[#4A4540] mt-1 pl-3 font-medium">
-                  One spot per phone number. Used to restore your active ticket.
+                  One spot per phone number.
                 </p>
               </div>
             </div>
           </div>
 
           {/* Step 2: Select Services in Pill Card */}
-          <div className="bg-[#FFFFFF] rounded-[32px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-4">
+          <div className="bg-[#FFFFFF] rounded-[32px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-4 animate-fade-in-up stagger-4">
             <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-3">
               <div className="flex items-center gap-2.5">
                 <span className="w-6 h-6 rounded-full bg-[#1C1A18] text-[#F7F3EE] text-[11px] font-black flex items-center justify-center">
@@ -302,7 +302,7 @@ export default function JoinQueue() {
           </div>
 
           {/* Step 3: Preferred Stylist in Pill Card */}
-          <div className="bg-[#FFFFFF] rounded-[32px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-4">
+          <div className="bg-[#FFFFFF] rounded-[32px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-4 animate-fade-in-up stagger-5">
             <div className="flex items-center gap-2.5 border-b border-[#E4DBD0] pb-3">
               <span className="w-6 h-6 rounded-full bg-[#1C1A18] text-[#F7F3EE] text-[11px] font-black flex items-center justify-center">
                 3
@@ -392,9 +392,9 @@ export default function JoinQueue() {
           </div>
         </div>
 
-        {/* Right Column (Sticky Floating Dynamic Island Summary on Laptop Screen) */}
+        {/* Right Column (Sticky Summary on Laptop Screen) */}
         <div className="lg:col-span-5 lg:sticky lg:top-4 space-y-4">
-          <div className="bg-[#1C1A18] text-[#F7F3EE] rounded-[36px] p-6 md:p-7 border border-[#4A4540] shadow-2xl space-y-5">
+          <div className="bg-[#1C1A18] text-[#F7F3EE] rounded-[36px] p-6 md:p-7 border border-[#4A4540] shadow-2xl space-y-5 animate-fade-in-scale stagger-3">
             {/* Header Badge */}
             <div className="flex items-center justify-between border-b border-[#4A4540]/50 pb-3">
               <div className="flex items-center gap-2">
@@ -404,7 +404,7 @@ export default function JoinQueue() {
                 </h3>
               </div>
               <span className="text-[10px] bg-[#4A4540] text-[#E4DBD0] px-3 py-1 rounded-full font-bold">
-                Smart Island
+                Live Ticket
               </span>
             </div>
 
@@ -457,7 +457,7 @@ export default function JoinQueue() {
               ) : (
                 <Icon icon="solar:ticket-bold" className="w-5 h-5 text-[#1C1A18]" />
               )}
-              <span>{submitting ? 'Confirming Spot...' : 'Confirm & Enter Island Queue'}</span>
+              <span>{submitting ? 'Confirming Spot...' : 'Confirm & Join Live Queue'}</span>
             </button>
 
             <p className="text-[10px] text-[#C2B4A3] text-center leading-relaxed">

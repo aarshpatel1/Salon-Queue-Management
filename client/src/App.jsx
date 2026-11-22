@@ -53,7 +53,7 @@ function AppLayout() {
         </div>
 
         {/* Scrollable Viewport - Everything scrolls smoothly vertically */}
-        <main className="flex-1 overflow-y-auto min-h-0 px-3 md:px-6 py-3 pb-28 md:pb-16 scrollbar-thin">
+        <main className="flex-1 overflow-y-auto min-h-0 px-3 md:px-6 py-3 pb-28 md:pb-16 scrollbar-thin scroll-smooth">
           <Routes>
             {/* Public Screens */}
             <Route path="/" element={<Home />} />
