@@ -5,7 +5,9 @@ import { useSocket } from '../context/SocketContext';
 import { useToast } from '../context/ToastContext';
 import WalkInModal from '../components/WalkInModal';
 import CustomerProfileModal from '../components/CustomerProfileModal';
+import EditCustomerModal from '../components/EditCustomerModal';
 import RealTimeTimeline from '../components/RealTimeTimeline';
+import Avatar from '../components/Avatar';
 import CustomModal from '../components/CustomModal';
 
 export default function Reception() {
@@ -16,8 +18,13 @@ export default function Reception() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [walkInModalOpen, setWalkInModalOpen] = useState(false);
+  const [editingToken, setEditingToken] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   const [selectedToken, setSelectedToken] = useState(null);
+
+  // Drag and Drop State
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
 
   // Custom Confirmation Modal state
   const [confirmDialog, setConfirmDialog] = useState({
@@ -168,6 +175,79 @@ export default function Reception() {
     });
   };
 
+  // Delete token permanently from queue
+  const handleDeleteToken = (tokenId, customerName) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Remove Guest',
+      message: `Permanently remove ${customerName} from the queue?`,
+      onConfirm: async () => {
+        setConfirmDialog({ isOpen: false, title: '', message: '', onConfirm: null });
+        setActionLoading(`delete-${tokenId}`);
+        try {
+          const res = await apiRequest(`/api/queue/token/${tokenId}`, {
+            method: 'DELETE'
+          });
+          if (res.success) {
+            addToast(`Removed ${customerName} from queue`, 'info');
+            fetchReceptionData();
+          }
+        } catch (err) {
+          addToast(err.message || 'Failed to remove guest', 'error');
+        } finally {
+          setActionLoading(null);
+        }
+      }
+    });
+  };
+
+  // Drag and Drop Handlers for Queue Rearranging
+  const handleDragStart = (e, index) => {
+    e.dataTransfer.setData('text/plain', String(index));
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDrop = async (e, dropIndex) => {
+    e.preventDefault();
+    const sourceIndex = draggedIndex;
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+
+    if (sourceIndex === null || sourceIndex === dropIndex) return;
+
+    const reordered = [...waitingList];
+    const [moved] = reordered.splice(sourceIndex, 1);
+    reordered.splice(dropIndex, 0, moved);
+
+    setWaitingList(reordered);
+
+    try {
+      const orderedTokenIds = reordered.map((t) => t._id);
+      await apiRequest('/api/queue/reorder', {
+        method: 'POST',
+        body: JSON.stringify({ orderedTokenIds })
+      });
+      addToast('Queue order updated', 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to save queue rearrangement', 'error');
+      fetchReceptionData();
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   const getElapsedWaitMinutes = (joinedAt) => {
     if (!joinedAt) return 0;
     const diffMs = Date.now() - new Date(joinedAt).getTime();
@@ -236,10 +316,10 @@ export default function Reception() {
                 >
                   <div>
                     <div className="flex items-center gap-2.5 mb-3">
-                      <img
+                      <Avatar
                         src={barber.avatar}
-                        alt={barber.name}
-                        className="w-10 h-10 rounded-full object-cover shrink-0 border border-[#C2B4A3]"
+                        name={barber.name}
+                        size="md"
                       />
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-black text-[#1C1A18] truncate">{barber.name}</p>
@@ -349,20 +429,20 @@ export default function Reception() {
           </div>
         </div>
 
-        {/* Right Column: Ordered Waiting Queue (Pill Shapes) */}
+        {/* Right Column: Ordered Waiting Queue (Pill Shapes & Drag-and-Drop) */}
         <div className="lg:col-span-5 bg-[#FFFFFF] rounded-[36px] p-6 border border-[#E4DBD0] shadow-xs space-y-4 animate-fade-in-up stagger-3">
-          <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-3">
+          <div className="flex items-center justify-between pb-1">
             <div>
               <h2 className="text-base font-black text-[#1C1A18] flex items-center gap-2">
                 <Icon icon="solar:clock-circle-bold" className="w-5 h-5 text-[#1C1A18]" />
                 <span>Live Waiting Queue ({waitingList.length})</span>
               </h2>
               <p className="text-[11px] text-[#4A4540]">
-                Click any profile pill to inspect (Self-removal disabled)
+                Drag & drop to rearrange • Click to view • Edit & manage
               </p>
             </div>
             <span className="text-[10px] font-black text-[#1C1A18] bg-[#E4DBD0] px-3 py-1 rounded-full border border-[#C2B4A3]">
-              FCFS Live
+              Drag & Reorder
             </span>
           </div>
 
@@ -377,23 +457,49 @@ export default function Reception() {
                 const waitMins = getElapsedWaitMinutes(item.joinedAt);
                 const isOver60 = waitMins > 60;
                 const isCalled = item.status === 'Called';
+                const isDragged = draggedIndex === index;
+                const isDragOver = dragOverIndex === index;
 
                 return (
                   <div
                     key={item._id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={handleDragEnd}
                     onClick={() => setSelectedToken(item)}
-                    className={`p-3.5 rounded-full border transition-all cursor-pointer flex items-center justify-between px-4 ${
-                      isCalled
+                    className={`p-3 rounded-full border transition-all cursor-pointer flex items-center justify-between px-3.5 select-none ${
+                      isDragged
+                        ? 'opacity-40 scale-95 border-dashed border-[#1C1A18]'
+                        : isDragOver
+                        ? 'border-[#1C1A18] bg-[#F7F3EE] scale-[1.02] shadow-sm'
+                        : isCalled
                         ? 'border-[#1C1A18] bg-[#E4DBD0] shadow-xs'
                         : isOver60
                         ? 'border-[#C2B4A3] bg-[#F7F3EE]'
                         : 'border-[#E4DBD0] bg-[#FFFFFF] hover:border-[#1C1A18]'
                     }`}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {/* Drag Handle Grip Icon */}
+                      <span
+                        title="Drag to rearrange position"
+                        className="cursor-grab active:cursor-grabbing p-1 text-[#C2B4A3] hover:text-[#1C1A18] shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Icon icon="solar:reorder-bold" className="w-4 h-4" />
+                      </span>
+
+                      {/* Customer Avatar */}
+                      <Avatar src={item.avatar} name={item.customerName} size="sm" />
+
+                      {/* Token Number */}
                       <span className="text-xs font-black text-[#F7F3EE] bg-[#1C1A18] px-2.5 py-0.5 rounded-full shrink-0">
                         {item.tokenNumber}
                       </span>
+
+                      {/* Customer Info */}
                       <div className="min-w-0">
                         <p className="text-xs font-black text-[#1C1A18] truncate">
                           {item.customerName}
@@ -404,12 +510,34 @@ export default function Reception() {
                       </div>
                     </div>
 
+                    {/* Actions: Edit, Delete, No-Show, Cancel */}
                     <div
-                      className="flex items-center gap-2 shrink-0 ml-2"
+                      className="flex items-center gap-1.5 shrink-0 ml-2"
                       onClick={(e) => e.stopPropagation()}
                     >
+                      {/* Edit Button */}
+                      <button
+                        type="button"
+                        onClick={() => setEditingToken(item)}
+                        title="Edit Customer"
+                        className="w-7 h-7 rounded-full bg-[#F7F3EE] hover:bg-[#E4DBD0] border border-[#E4DBD0] text-[#1C1A18] flex items-center justify-center transition-colors cursor-pointer"
+                      >
+                        <Icon icon="solar:pen-bold" className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Delete Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteToken(item._id, item.customerName)}
+                        title="Remove from Queue"
+                        className="w-7 h-7 rounded-full bg-[#F7F3EE] hover:bg-[#ef4444]/20 border border-[#E4DBD0] text-[#4A4540] hover:text-[#ef4444] flex items-center justify-center transition-colors cursor-pointer"
+                      >
+                        <Icon icon="solar:trash-bin-trash-bold" className="w-3.5 h-3.5" />
+                      </button>
+
                       {isCalled ? (
                         <button
+                          type="button"
                           onClick={() => handleMarkNoShow(item._id, item.customerName)}
                           disabled={actionLoading === `noshow-${item._id}`}
                           className="px-3 py-1 rounded-full text-[10px] font-bold text-[#F7F3EE] bg-[#1C1A18] hover:bg-[#4A4540] transition-colors cursor-pointer"
@@ -418,6 +546,7 @@ export default function Reception() {
                         </button>
                       ) : (
                         <button
+                          type="button"
                           onClick={() => handleCancel(item._id, item.customerName)}
                           disabled={actionLoading === `cancel-${item._id}`}
                           className="px-3 py-1 rounded-full text-[10px] font-bold text-[#1C1A18] bg-[#E4DBD0] hover:bg-[#C2B4A3] border border-[#C2B4A3] transition-colors cursor-pointer"
@@ -444,6 +573,17 @@ export default function Reception() {
           setSelectedToken(null);
           handleCancel(id, selectedToken?.customerName);
         }}
+        onEditSpot={(tok) => setEditingToken(tok)}
+      />
+
+      {/* Edit Customer Modal */}
+      <EditCustomerModal
+        isOpen={!!editingToken}
+        onClose={() => setEditingToken(null)}
+        token={editingToken}
+        onUpdated={() => fetchReceptionData()}
+        barbers={barbers}
+        services={services}
       />
 
       {/* Add Walk-in Modal */}

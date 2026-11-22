@@ -148,17 +148,21 @@ aside::-webkit-scrollbar-thumb:hover {
   animation: islandPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Dynamic Island Fluid Morph Transitions */
-@keyframes dynamicIslandExpand {
+/* Dynamic Island Fluid Morph Transitions - Fast yet silky smooth height expansion */
+@keyframes dynamicIslandGrowToModal {
   0% {
-    opacity: 0;
-    transform: translateY(90px) scale(0.65);
+    opacity: 0.85;
+    transform: translateY(calc(50vh - 60px)) scaleX(0.7) scaleY(0.12);
     border-radius: 9999px;
   }
-  60% {
+  50% {
     opacity: 1;
-    transform: translateY(-6px) scale(1.02);
-    border-radius: 40px;
+    transform: translateY(10px) scaleX(0.96) scaleY(0.85);
+    border-radius: 44px;
+  }
+  80% {
+    transform: translateY(-4px) scaleX(1.01) scaleY(1.02);
+    border-radius: 38px;
   }
   100% {
     opacity: 1;
@@ -167,15 +171,20 @@ aside::-webkit-scrollbar-thumb:hover {
   }
 }
 
-@keyframes dynamicIslandCollapse {
+@keyframes dynamicIslandShrinkFromModal {
   0% {
     opacity: 1;
     transform: translateY(0) scale(1);
     border-radius: 36px;
   }
+  40% {
+    opacity: 0.95;
+    transform: translateY(16px) scaleX(0.95) scaleY(0.7);
+    border-radius: 44px;
+  }
   100% {
     opacity: 0;
-    transform: translateY(90px) scale(0.65);
+    transform: translateY(calc(50vh - 60px)) scaleX(0.7) scaleY(0.12);
     border-radius: 9999px;
   }
 }
@@ -183,11 +192,11 @@ aside::-webkit-scrollbar-thumb:hover {
 @keyframes dynamicPillSpring {
   0% {
     opacity: 0;
-    transform: translateY(30px) scale(0.85);
+    transform: translateY(24px) scale(0.85);
   }
   70% {
     opacity: 1;
-    transform: translateY(-4px) scale(1.03);
+    transform: translateY(-3px) scale(1.02);
   }
   100% {
     opacity: 1;
@@ -195,16 +204,71 @@ aside::-webkit-scrollbar-thumb:hover {
   }
 }
 
-.animate-island-expand {
-  animation: dynamicIslandExpand 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.animate-island-grow-modal {
+  animation: dynamicIslandGrowToModal 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: center bottom;
 }
 
-.animate-island-collapse {
-  animation: dynamicIslandCollapse 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.animate-island-shrink-modal {
+  animation: dynamicIslandShrinkFromModal 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: center bottom;
 }
 
 .animate-pill-spring {
-  animation: dynamicPillSpring 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: dynamicPillSpring 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Button clicked -> Modal transforms from button animation */
+@keyframes modalPopFromButton {
+  0% {
+    opacity: 0;
+    transform: scale(0.75) translateY(24px);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.02) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal-pop {
+  animation: modalPopFromButton 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: center center;
+}
+
+/* Desktop initial loading animation bar */
+@keyframes loaderSlide {
+  0% {
+    transform: translateX(-100%);
+    width: 25%;
+  }
+  50% {
+    width: 60%;
+  }
+  100% {
+    transform: translateX(200%);
+    width: 25%;
+  }
+}
+
+.animate-loader-slide {
+  animation: loaderSlide 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* On-scroll animations */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* Staggered On-Load Entrance Animations for All Elements */

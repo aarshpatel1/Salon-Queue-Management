@@ -7,6 +7,7 @@ import { useToast } from '../context/ToastContext';
 import CustomDropdown from '../components/CustomDropdown';
 import RealTimeTimeline from '../components/RealTimeTimeline';
 import CustomerProfileModal from '../components/CustomerProfileModal';
+import Avatar from '../components/Avatar';
 
 export default function BarberView() {
   const { name } = useParams();
@@ -253,7 +254,7 @@ export default function BarberView() {
         <div className="lg:col-span-7 space-y-6">
           {/* Active Customer in Chair or Called Capsule */}
           <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-5 animate-fade-in-up stagger-2">
-            <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-3.5">
+            <div className="flex items-center justify-between pb-2 mb-2">
               <div className="flex items-center gap-2.5">
                 <span className="w-8 h-8 rounded-full bg-[#1C1A18] text-[#F7F3EE] flex items-center justify-center">
                   <Icon icon="solar:chair-bold" className="w-4 h-4 text-[#C2B4A3]" />
@@ -285,19 +286,27 @@ export default function BarberView() {
                   onClick={() => setSelectedProfileToken(currentToken)}
                   className="p-5 rounded-[28px] bg-[#F7F3EE] border border-[#E4DBD0] flex items-center justify-between cursor-pointer hover:border-[#1C1A18] transition-colors"
                 >
-                  <div>
-                    <span className="text-xs font-black text-[#F7F3EE] bg-[#1C1A18] px-3 py-0.5 rounded-full inline-block mb-1.5">
-                      {currentToken.tokenNumber}
-                    </span>
-                    <h3 className="text-lg font-black text-[#1C1A18]">
-                      {currentToken.customerName}
-                    </h3>
-                    <p className="text-xs text-[#4A4540] mt-0.5 font-medium">
-                      {(currentToken.services || []).map((s) => s.name).join(', ')}
-                    </p>
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <Avatar
+                      src={currentToken.avatar}
+                      name={currentToken.customerName}
+                      size="w-12 h-12 text-sm"
+                      className="border border-[#C2B4A3] shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <span className="text-xs font-black text-[#F7F3EE] bg-[#1C1A18] px-3 py-0.5 rounded-full inline-block mb-1.5">
+                        {currentToken.tokenNumber}
+                      </span>
+                      <h3 className="text-lg font-black text-[#1C1A18] truncate">
+                        {currentToken.customerName}
+                      </h3>
+                      <p className="text-xs text-[#4A4540] mt-0.5 font-medium truncate">
+                        {(currentToken.services || []).map((s) => s.name).join(', ')}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <span className="text-base font-black text-[#1C1A18]">
                       ₹{currentToken.totalPrice}
                     </span>
@@ -389,10 +398,11 @@ export default function BarberView() {
           {/* Stylist Profile Card */}
           <div className="bg-[#FFFFFF] rounded-[36px] p-6 border border-[#E4DBD0] shadow-xs flex items-center justify-between gap-4 animate-fade-in-up stagger-3">
             <div className="flex items-center gap-3.5">
-              <img
+              <Avatar
                 src={barber.avatar}
-                alt={barber.name}
-                className="w-14 h-14 rounded-full object-cover border border-[#C2B4A3] shrink-0"
+                name={barber.name}
+                size="w-14 h-14 text-base"
+                className="border border-[#C2B4A3] shrink-0"
               />
               <div>
                 <h3 className="text-base font-black text-[#1C1A18]">{barber.name}</h3>
@@ -413,7 +423,7 @@ export default function BarberView() {
         <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-4">
           {/* Up Next For You Card */}
           <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-3.5 animate-fade-in-scale stagger-2">
-            <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-3">
+            <div className="flex items-center justify-between pb-2 mb-1">
               <h3 className="text-xs font-black text-[#1C1A18] uppercase tracking-wider flex items-center gap-2">
                 <Icon icon="solar:user-bold" className="w-4 h-4 text-[#1C1A18]" />
                 <span>Next Specific Request For You</span>
@@ -432,6 +442,12 @@ export default function BarberView() {
                   <span className="text-xs font-black text-[#F7F3EE] bg-[#1C1A18] px-3 py-1 rounded-full shrink-0">
                     {nextForYou.tokenNumber}
                   </span>
+                  <Avatar
+                    src={nextForYou.avatar}
+                    name={nextForYou.customerName}
+                    size="w-8 h-8 text-[11px]"
+                    className="border border-[#C2B4A3] shrink-0"
+                  />
                   <div className="min-w-0">
                     <p className="text-xs font-black text-[#1C1A18] truncate">
                       {nextForYou.customerName}
@@ -455,7 +471,7 @@ export default function BarberView() {
 
           {/* Full Salon Waiting Queue List */}
           <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-3.5 animate-fade-in-scale stagger-4">
-            <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-3">
+            <div className="flex items-center justify-between pb-2 mb-1">
               <h3 className="text-xs font-black text-[#1C1A18] uppercase tracking-wider flex items-center gap-2">
                 <Icon icon="solar:clock-circle-bold" className="w-4 h-4 text-[#1C1A18]" />
                 <span>Live Salon Queue ({allWaiting.length})</span>
@@ -488,6 +504,12 @@ export default function BarberView() {
                         <span className="text-xs font-black text-[#F7F3EE] bg-[#1C1A18] px-2.5 py-0.5 rounded-full shrink-0">
                           {token.tokenNumber}
                         </span>
+                        <Avatar
+                          src={token.avatar}
+                          name={token.customerName}
+                          size="w-7 h-7 text-[10px]"
+                          className="border border-[#C2B4A3] shrink-0"
+                        />
                         <span className="font-bold text-[#1C1A18] truncate max-w-[110px]">
                           {token.customerName}
                         </span>

@@ -17,6 +17,10 @@ const QueueTokenSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
+    avatar: {
+      type: String,
+      default: ''
+    },
     phone: {
       type: String,
       required: true,

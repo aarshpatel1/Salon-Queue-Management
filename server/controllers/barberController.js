@@ -1,5 +1,6 @@
 import Barber from '../models/Barber.js';
 import QueueToken from '../models/QueueToken.js';
+import { uploadToCloudinary } from '../configs/cloudinary.js';
 
 export const getAllBarbers = async (req, res) => {
   try {
@@ -116,6 +117,155 @@ export const toggleBarberDuty = async (req, res) => {
       barber
     });
   } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Staff: Create a new barber
+ */
+export const createBarber = async (req, res) => {
+  try {
+    const { name, specialty, avatar = '', isOnDuty = true } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, message: 'Barber name is required' });
+    }
+
+    const trimmedName = name.trim();
+    const existing = await Barber.findOne({
+      name: { $regex: new RegExp(`^${trimmedName}$`, 'i') }
+    });
+    if (existing) {
+      return res.status(400).json({ success: false, message: `Barber with name '${trimmedName}' already exists` });
+    }
+
+    const newBarber = await Barber.create({
+      name: trimmedName,
+      specialty: (specialty || 'Senior Stylist').trim(),
+      avatar: avatar.trim(),
+      isOnDuty: Boolean(isOnDuty),
+      status: 'Available'
+    });
+
+    const io = req.app.get('io');
+    if (io) io.emit('queue:updated');
+
+    return res.status(201).json({
+      success: true,
+      message: `Barber '${newBarber.name}' added successfully`,
+      barber: newBarber
+    });
+  } catch (error) {
+    console.error('Error creating barber:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Staff: Update an existing barber
+ */
+export const updateBarber = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, specialty, avatar, isOnDuty, status } = req.body;
+
+    const barber = await Barber.findById(id);
+    if (!barber) {
+      return res.status(404).json({ success: false, message: 'Barber not found' });
+    }
+
+    if (name && name.trim() && name.trim().toLowerCase() !== barber.name.toLowerCase()) {
+      const conflict = await Barber.findOne({
+        _id: { $ne: id },
+        name: { $regex: new RegExp(`^${name.trim()}$`, 'i') }
+      });
+      if (conflict) {
+        return res.status(400).json({ success: false, message: `A barber named '${name.trim()}' already exists` });
+      }
+      barber.name = name.trim();
+    }
+
+    if (specialty !== undefined) barber.specialty = specialty.trim();
+    if (avatar !== undefined) barber.avatar = avatar.trim();
+    if (isOnDuty !== undefined) barber.isOnDuty = Boolean(isOnDuty);
+    if (status !== undefined && ['Available', 'Busy', 'On break'].includes(status)) {
+      barber.status = status;
+    }
+
+    await barber.save();
+
+    const io = req.app.get('io');
+    if (io) io.emit('queue:updated');
+
+    return res.json({
+      success: true,
+      message: `Barber '${barber.name}' updated successfully`,
+      barber
+    });
+  } catch (error) {
+    console.error('Error updating barber:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Staff: Delete a barber
+ */
+export const deleteBarber = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const barber = await Barber.findById(id);
+
+    if (!barber) {
+      return res.status(404).json({ success: false, message: 'Barber not found' });
+    }
+
+    if (barber.status === 'Busy' || barber.currentCustomer?.tokenId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot delete barber while they are currently serving a client in chair.'
+      });
+    }
+
+    // If waiting tokens had preferred this barber, reset their preference to Any
+    await QueueToken.updateMany(
+      { preferredBarber: id, status: { $in: ['Waiting', 'Called'] } },
+      { $set: { preferredBarber: null, preferredBarberName: 'Any barber (fastest)' } }
+    );
+
+    await Barber.findByIdAndDelete(id);
+
+    const io = req.app.get('io');
+    if (io) io.emit('queue:updated');
+
+    return res.json({
+      success: true,
+      message: `Barber '${barber.name}' removed successfully`
+    });
+  } catch (error) {
+    console.error('Error deleting barber:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Staff: Upload barber avatar
+ */
+export const uploadBarberAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image file uploaded' });
+    }
+
+    const result = await uploadToCloudinary(req.file.buffer, 'barber_avatars');
+    return res.json({
+      success: true,
+      url: result.secure_url,
+      publicId: result.public_id
+    });
+  } catch (error) {
+    console.error('Error in uploadBarberAvatar:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };

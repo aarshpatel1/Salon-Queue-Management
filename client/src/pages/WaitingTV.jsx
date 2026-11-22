@@ -5,6 +5,7 @@ import apiRequest from '../api/apiClient';
 import { useSocket } from '../context/SocketContext';
 import { playChime } from '../utils/audioChime';
 import RealTimeTimeline from '../components/RealTimeTimeline';
+import Avatar from '../components/Avatar';
 
 export default function WaitingTV() {
   const { lastSyncTime, lastCalledAlert } = useSocket();
@@ -109,7 +110,7 @@ export default function WaitingTV() {
       )}
 
       {/* Top Header: Brand & Live Salon Stats in Pill */}
-      <div className="flex items-center justify-between border-b border-[#4A4540]/50 pb-6 shrink-0 animate-fade-in-scale stagger-1">
+      <div className="flex items-center justify-between pb-4 mb-2 shrink-0 animate-fade-in-scale stagger-1">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-[#F7F3EE] flex items-center justify-center shadow-md">
             <Icon icon="solar:scissors-bold" className="w-8 h-8 text-[#1C1A18] -rotate-45" />
@@ -154,7 +155,7 @@ export default function WaitingTV() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 my-6 items-stretch flex-1 min-h-0 overflow-hidden">
         {/* Left Section: Stylist Chairs in Pill Capsules */}
         <div className="lg:col-span-7 space-y-4 flex flex-col justify-between overflow-y-auto pr-1 scrollbar-thin animate-fade-in-up stagger-2">
-          <div className="flex items-center justify-between border-b border-[#4A4540]/30 pb-3 shrink-0">
+          <div className="flex items-center justify-between pb-2 mb-1 shrink-0">
             <h2 className="text-lg font-black text-[#F7F3EE] flex items-center gap-2">
               <Icon icon="solar:scissors-bold" className="w-5 h-5 text-[#C2B4A3]" />
               <span>Active Stylist Chairs</span>
@@ -185,10 +186,11 @@ export default function WaitingTV() {
                   <div>
                     {/* Stylist Profile */}
                     <div className="flex items-center gap-3 mb-3">
-                      <img
+                      <Avatar
                         src={barber.avatar}
-                        alt={barber.name}
-                        className="w-12 h-12 rounded-full object-cover border border-[#C2B4A3] shrink-0"
+                        name={barber.name}
+                        size="w-12 h-12 text-sm"
+                        className="border border-[#C2B4A3] shrink-0"
                       />
                       <div className="min-w-0">
                         <p className="font-black text-sm text-[#F7F3EE] truncate">
@@ -250,7 +252,7 @@ export default function WaitingTV() {
 
         {/* Right Section: Up Next in Line in Capsule Island */}
         <div className="lg:col-span-5 bg-[#4A4540]/25 rounded-[36px] p-6 border border-[#4A4540] shadow-xl flex flex-col justify-between space-y-4 overflow-hidden animate-fade-in-up stagger-3">
-          <div className="flex items-center justify-between border-b border-[#4A4540]/40 pb-3 shrink-0">
+          <div className="flex items-center justify-between pb-2 mb-1 shrink-0">
             <h2 className="text-lg font-black text-[#F7F3EE] flex items-center gap-2">
               <Icon icon="solar:clock-circle-bold" className="w-5 h-5 text-[#C2B4A3]" />
               <span>Up Next in Line</span>
@@ -279,7 +281,7 @@ export default function WaitingTV() {
                 >
                   <div className="flex items-center gap-3.5">
                     <span
-                      className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs ${
+                      className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs shrink-0 ${
                         index === 0
                           ? 'bg-[#F7F3EE] text-[#1C1A18]'
                           : 'bg-[#4A4540] text-[#F7F3EE]'
@@ -287,6 +289,12 @@ export default function WaitingTV() {
                     >
                       #{index + 1}
                     </span>
+                    <Avatar
+                      src={token.avatar}
+                      name={token.customerName}
+                      size="w-9 h-9 text-xs"
+                      className="border border-[#4A4540] shrink-0"
+                    />
                     <div>
                       <p className="text-lg font-black text-[#F7F3EE]">{token.tokenNumber}</p>
                       <p className="text-xs text-[#E4DBD0] truncate max-w-[150px]">

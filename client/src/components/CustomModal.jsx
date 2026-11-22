@@ -30,18 +30,18 @@ export default function CustomModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-transparent select-none animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-transparent select-none animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className={`bg-[#FFFFFF] text-[#1C1A18] rounded-[36px] w-full ${maxWidth} border border-[#E4DBD0] shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150`}
+        className={`bg-[#FFFFFF] text-[#1C1A18] rounded-[36px] w-full ${maxWidth} border border-[#E4DBD0] shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] animate-modal-pop`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Floating Capsule Header */}
-        <div className="px-6 py-4.5 border-b border-[#E4DBD0] bg-[#F7F3EE] flex items-center justify-between shrink-0">
+        <div className="px-6 pt-5 pb-3 bg-[#F7F3EE] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             {icon && (
-              <div className="w-10 h-10 rounded-full bg-[#1C1A18] text-[#F7F3EE] flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#1C1A18] text-[#F7F3EE] flex items-center justify-center shrink-0 shadow-xs">
                 <Icon icon={icon} className="w-5 h-5 text-[#C2B4A3]" />
               </div>
             )}

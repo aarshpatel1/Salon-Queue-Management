@@ -8,6 +8,7 @@ import Navbar from './components/Navbar';
 import PinModal from './components/PinModal';
 import ProtectedRoute from './components/ProtectedRoute';
 import DynamicIsland from './components/DynamicIsland';
+import DesktopLoader from './components/DesktopLoader';
 
 // Pages
 import Home from './pages/Home';
@@ -30,9 +31,29 @@ function AppLayout() {
     }
   }, [location.pathname, location.search]);
 
+  // On-scroll entrance animations observer
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -20px 0px' }
+    );
+
+    const elements = document.querySelectorAll('.scroll-reveal');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [location.pathname]);
+
   if (isDisplayScreen) {
     return (
       <main className="h-[100dvh] max-h-[100dvh] w-screen overflow-hidden bg-[#1C1A18] text-[#F7F3EE]">
+        <DesktopLoader />
         <Routes>
           <Route path="/display" element={<WaitingTV />} />
         </Routes>
@@ -42,6 +63,9 @@ function AppLayout() {
 
   return (
     <div className="h-[100dvh] max-h-[100dvh] w-screen overflow-hidden flex bg-[#F7F3EE] text-[#1C1A18] font-sans antialiased">
+      {/* Desktop Initial Loader */}
+      <DesktopLoader />
+
       {/* Dynamic Island Sidebar (Desktop) */}
       <Sidebar />
 

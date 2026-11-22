@@ -3,12 +3,15 @@ import { Icon } from '@iconify/react';
 import apiRequest from '../api/apiClient';
 import CustomModal from './CustomModal';
 import CustomDropdown from './CustomDropdown';
+import Avatar from './Avatar';
 import { useToast } from '../context/ToastContext';
 
 export default function WalkInModal({ isOpen, onClose, onWalkInAdded, barbers = [], services = [] }) {
   const { addToast } = useToast();
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
+  const [avatar, setAvatar] = useState('');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [selectedServiceIds, setSelectedServiceIds] = useState([]);
   const [preferredBarberId, setPreferredBarberId] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -21,6 +24,29 @@ export default function WalkInModal({ isOpen, onClose, onWalkInAdded, barbers = 
   }, [isOpen, services]);
 
   if (!isOpen) return null;
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const res = await apiRequest('/api/queue/upload-avatar', {
+        method: 'POST',
+        body: formData
+      });
+      if (res.success && res.url) {
+        setAvatar(res.url);
+      }
+    } catch (err) {
+      const reader = new FileReader();
+      reader.onload = (evt) => setAvatar(evt.target.result);
+      reader.readAsDataURL(file);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleToggleService = (id) => {
     if (selectedServiceIds.includes(id)) {
@@ -41,9 +67,9 @@ export default function WalkInModal({ isOpen, onClose, onWalkInAdded, barbers = 
       return;
     }
 
-    const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+    const cleanPhone = phone.replace(/\D/g, '');
     if (cleanPhone.length !== 10) {
-      setError('Valid 10-digit phone number is required');
+      setError('A valid 10-digit mobile number is required');
       return;
     }
 
@@ -59,6 +85,7 @@ export default function WalkInModal({ isOpen, onClose, onWalkInAdded, barbers = 
         body: JSON.stringify({
           customerName: customerName.trim(),
           phone: cleanPhone,
+          avatar: (avatar || '').trim(),
           serviceIds: selectedServiceIds,
           preferredBarberId: preferredBarberId || null,
           isWalkIn: true
@@ -71,6 +98,7 @@ export default function WalkInModal({ isOpen, onClose, onWalkInAdded, barbers = 
         onClose();
         setCustomerName('');
         setPhone('');
+        setAvatar('');
       } else {
         setError(res.message || 'Failed to add walk-in');
       }
@@ -106,6 +134,37 @@ export default function WalkInModal({ isOpen, onClose, onWalkInAdded, barbers = 
           </div>
         )}
 
+        {/* Optional Photo / Avatar upload with Initials fallback */}
+        <div className="p-3 rounded-[24px] bg-[#F7F3EE] border border-[#E4DBD0] flex items-center gap-3">
+          <Avatar src={avatar} name={customerName || 'Walk In'} size="lg" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <label className="px-3.5 py-1.5 rounded-full bg-[#1C1A18] text-[#F7F3EE] hover:bg-[#4A4540] text-xs font-bold cursor-pointer transition-colors inline-flex items-center gap-1.5">
+                <Icon icon="solar:camera-bold" className="w-3.5 h-3.5 text-[#C2B4A3]" />
+                <span>{uploadingAvatar ? 'Uploading...' : avatar ? 'Change Photo' : 'Upload Photo (Optional)'}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+              </label>
+              {avatar && (
+                <button
+                  type="button"
+                  onClick={() => setAvatar('')}
+                  className="px-2.5 py-1.5 rounded-full bg-white border border-[#E4DBD0] text-[#ef4444] text-[11px] font-bold hover:bg-[#F7F3EE] cursor-pointer"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+            <p className="text-[10px] text-[#4A4540] mt-1">
+              Optional. If omitted, initials placeholder is used.
+            </p>
+          </div>
+        </div>
+
         {/* Customer Name */}
         <div>
           <label className="block text-[10px] font-black text-[#4A4540] uppercase tracking-wider mb-1.5 pl-3">
@@ -129,11 +188,15 @@ export default function WalkInModal({ isOpen, onClose, onWalkInAdded, barbers = 
           <input
             type="tel"
             required
+            maxLength={10}
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
             placeholder="e.g. 9876543210"
             className="w-full px-5 py-3 bg-[#F7F3EE] border border-[#E4DBD0] rounded-full text-xs font-bold text-[#1C1A18] focus:outline-none focus:border-[#1C1A18]"
           />
+          <p className="text-[10px] text-[#4A4540] mt-1 pl-3 font-medium">
+            Must be exactly 10 digits.
+          </p>
         </div>
 
         {/* Services Multi-Select in Pills */}

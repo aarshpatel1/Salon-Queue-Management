@@ -3,21 +3,27 @@ import { useParams, useNavigate, NavLink } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import apiRequest from '../api/apiClient';
 import { useSocket } from '../context/SocketContext';
+import { useToast } from '../context/ToastContext';
 import { playChime, triggerVibration } from '../utils/audioChime';
 import confetti from 'canvas-confetti';
 import RealTimeTimeline from '../components/RealTimeTimeline';
+import Avatar from '../components/Avatar';
+import CustomModal from '../components/CustomModal';
 import { formatTimer } from '../utils/timeFormat';
 
 export default function MyStatus() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { lastSyncTime } = useSocket();
+  const { addToast } = useToast();
 
   const [tokenData, setTokenData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [hasCelebrated, setHasCelebrated] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   // 1-second live ticker
   useEffect(() => {
@@ -61,6 +67,26 @@ export default function MyStatus() {
   const isCalled = token?.status === 'Called';
   const isInChair = token?.status === 'In chair';
   const isDone = token?.status === 'Done';
+
+  const isCancelled = token?.status === 'Cancelled';
+
+  const handleOptOut = async () => {
+    setCancelling(true);
+    try {
+      const res = await apiRequest(`/api/queue/cancel/${id}`, { method: 'POST' });
+      if (res.success) {
+        localStorage.removeItem('elan_active_token_id');
+        window.dispatchEvent(new Event('elan_token_updated'));
+        addToast('You have cancelled your queue spot.', 'info');
+        setConfirmCancelOpen(false);
+        fetchStatus();
+      }
+    } catch (err) {
+      addToast(err.message || 'Failed to cancel spot', 'error');
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   // Calculate live countdown / elapsed wait timer
   let waitTimerSeconds = Math.max(0, (waitStats?.waitMinutes ?? 0) * 60);
@@ -181,6 +207,26 @@ export default function MyStatus() {
         </div>
       )}
 
+      {/* CANCELLED BANNER */}
+      {isCancelled && (
+        <div className="p-6 rounded-[32px] bg-[#F7F3EE] border border-[#E4DBD0] text-center space-y-3 animate-fade-in-up stagger-2">
+          <Icon icon="solar:close-circle-bold" className="w-10 h-10 text-[#4A4540] mx-auto" />
+          <h3 className="text-base font-bold text-[#1C1A18]">Turn Cancelled</h3>
+          <p className="text-xs text-[#4A4540]">
+            This queue turn was cancelled. You are now free to re-enter the queue whenever you are ready.
+          </p>
+          <div className="pt-2">
+            <NavLink
+              to="/join"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#1C1A18] text-[#F7F3EE] font-bold text-xs hover:bg-[#4A4540] transition-colors"
+            >
+              <Icon icon="solar:user-plus-bold" className="w-4 h-4 text-[#C2B4A3]" />
+              <span>Join Live Queue Again</span>
+            </NavLink>
+          </div>
+        </div>
+      )}
+
       {/* COMPLETED BANNER */}
       {isDone && (
         <div className="p-6 rounded-[32px] bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] text-center space-y-2 animate-fade-in-up stagger-2">
@@ -194,18 +240,21 @@ export default function MyStatus() {
 
       {/* Main Digital Ticket Capsule Card */}
       <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-5 animate-fade-in-up stagger-3">
-        <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-4">
+        <div className="flex items-center justify-between pb-2">
           <div>
             <span className="text-[10px] uppercase font-bold tracking-widest text-[#4A4540]">
               Ticket Number
             </span>
             <p className="text-3xl font-black text-[#1C1A18]">{token.tokenNumber}</p>
           </div>
-          <div className="text-right">
-            <span className="text-[10px] uppercase font-bold tracking-widest text-[#4A4540]">
-              Customer
-            </span>
-            <p className="text-base font-black text-[#1C1A18]">{token.customerName}</p>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#4A4540]">
+                Customer
+              </span>
+              <p className="text-base font-black text-[#1C1A18]">{token.customerName}</p>
+            </div>
+            <Avatar src={token.avatar} name={token.customerName} size="lg" />
           </div>
         </div>
 
@@ -251,17 +300,56 @@ export default function MyStatus() {
           </div>
         </div>
 
-        {/* Self-Removal Disabled Protection Note */}
-        <div className="p-4 rounded-[24px] bg-[#E4DBD0]/40 border border-[#C2B4A3] flex items-start gap-3">
-          <Icon icon="solar:shield-check-bold" className="w-5 h-5 text-[#1C1A18] shrink-0 mt-0.5" />
-          <div className="text-xs">
-            <p className="font-bold text-[#1C1A18] text-[11px]">Protected Spot</p>
-            <p className="text-[10px] text-[#4A4540] mt-0.5 leading-relaxed">
-              Your position in line is live and locked. Self-removal is disabled to maintain queue fairness. To adjust services or cancel, please check in at the reception desk.
+        {/* Opt Out / Cancel My Turn Button */}
+        {['Waiting', 'Called'].includes(token.status) && (
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => setConfirmCancelOpen(true)}
+              className="w-full py-3 rounded-full border border-[#ef4444]/40 bg-[#ef4444]/10 hover:bg-[#ef4444]/20 text-[#ef4444] font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Icon icon="solar:close-circle-bold" className="w-4 h-4" />
+              <span>Opt Out / Cancel My Turn</span>
+            </button>
+            <p className="text-[10px] text-[#4A4540] text-center mt-2 font-medium">
+              You can cancel your turn at any time to free your spot for other clients.
             </p>
           </div>
-        </div>
+        )}
       </div>
+
+      {/* Confirmation Modal for Opting Out */}
+      <CustomModal
+        isOpen={confirmCancelOpen}
+        onClose={() => setConfirmCancelOpen(false)}
+        title="Opt Out of Queue?"
+        subtitle={`Ticket ${token.tokenNumber}`}
+        icon="solar:danger-triangle-bold"
+        maxWidth="max-w-sm"
+      >
+        <div className="space-y-4 text-xs">
+          <p className="text-[#1C1A18] text-sm leading-relaxed font-medium">
+            Are you sure you want to cancel your turn in the queue? Your spot <strong>#{token.tokenNumber}</strong> will be released immediately.
+          </p>
+          <div className="flex items-center justify-end gap-2.5 pt-2">
+            <button
+              type="button"
+              onClick={() => setConfirmCancelOpen(false)}
+              className="px-5 py-2.5 rounded-full border border-[#E4DBD0] text-[#1C1A18] font-bold text-xs hover:bg-[#F7F3EE] transition-colors cursor-pointer"
+            >
+              Keep My Spot
+            </button>
+            <button
+              type="button"
+              disabled={cancelling}
+              onClick={handleOptOut}
+              className="px-5 py-2.5 rounded-full bg-[#ef4444] text-white font-bold text-xs hover:bg-[#dc2626] transition-colors cursor-pointer"
+            >
+              {cancelling ? 'Cancelling...' : 'Confirm Opt Out'}
+            </button>
+          </div>
+        </div>
+      </CustomModal>
     </div>
   );
 }

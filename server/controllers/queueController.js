@@ -2,6 +2,7 @@ import QueueToken from '../models/QueueToken.js';
 import Barber from '../models/Barber.js';
 import Service from '../models/Service.js';
 import SalonConfig from '../models/SalonConfig.js';
+import { uploadToCloudinary } from '../configs/cloudinary.js';
 import {
   canTransition,
   isOnlineJoiningAllowed,
@@ -28,16 +29,16 @@ const emitQueueChange = (req, eventName = 'queue:updated', payload = null) => {
  */
 export const joinQueue = async (req, res) => {
   try {
-    const { customerName, phone, serviceIds, preferredBarberId, isWalkIn = false } = req.body;
+    const { customerName, phone, serviceIds, preferredBarberId, avatar = '', isWalkIn = false } = req.body;
 
     if (!customerName || !customerName.trim()) {
       return res.status(400).json({ success: false, message: 'Customer name is required' });
     }
 
-    // 10-digit phone validation
-    const cleanPhone = (phone || '').replace(/\D/g, '').slice(-10);
+    // Strict 10-digit phone validation
+    const cleanPhone = (phone || '').replace(/\D/g, '');
     if (!cleanPhone || cleanPhone.length !== 10) {
-      return res.status(400).json({ success: false, message: 'A valid 10-digit phone number is required' });
+      return res.status(400).json({ success: false, message: 'A valid 10-digit mobile number is required' });
     }
 
     // Validate services (min 1, max 3)
@@ -56,10 +57,10 @@ export const joinQueue = async (req, res) => {
     // Duplicate Phone Check: Enforce one active token per 10-digit phone
     const existingActive = await findActiveTokenByPhone(cleanPhone);
     if (existingActive) {
-      return res.status(200).json({
-        success: true,
+      return res.status(400).json({
+        success: false,
         alreadyActive: true,
-        message: 'You already have an active queue spot! Redirecting to your status.',
+        message: `You already have an active turn (Token ${existingActive.tokenNumber}) in the queue. You cannot join again until you cancel your current turn.`,
         token: existingActive
       });
     }
@@ -99,6 +100,7 @@ export const joinQueue = async (req, res) => {
       tokenNumber,
       tokenSequence,
       customerName: customerName.trim(),
+      avatar: (avatar || '').trim(),
       phone: cleanPhone,
       services: servicesPayload,
       totalDuration,
@@ -472,6 +474,193 @@ export const getReceptionQueue = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in getReceptionQueue:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Staff: Rearrange queue order (Drag and Drop)
+ */
+export const reorderQueue = async (req, res) => {
+  try {
+    const { orderedTokenIds } = req.body;
+    if (!Array.isArray(orderedTokenIds) || orderedTokenIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'Invalid ordered token list' });
+    }
+
+    const waitingTokens = await QueueToken.find({
+      _id: { $in: orderedTokenIds },
+      status: { $in: ['Waiting', 'Called'] }
+    });
+
+    const tokenMap = new Map(waitingTokens.map(t => [t._id.toString(), t]));
+
+    const bulkOps = [];
+    orderedTokenIds.forEach((id, idx) => {
+      if (tokenMap.has(id.toString())) {
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: id },
+            update: { $set: { tokenSequence: idx + 1 } }
+          }
+        });
+      }
+    });
+
+    if (bulkOps.length > 0) {
+      await QueueToken.bulkWrite(bulkOps);
+    }
+
+    emitQueueChange(req, 'queue:updated');
+
+    const updatedList = await QueueToken.find({
+      status: { $in: ['Waiting', 'Called'] }
+    }).sort({ tokenSequence: 1 });
+
+    return res.json({
+      success: true,
+      message: 'Queue order rearranged successfully',
+      waitingList: updatedList
+    });
+  } catch (error) {
+    console.error('Error in reorderQueue:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Staff: Update customer queue token (CRUD - Update)
+ */
+export const updateQueueToken = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { customerName, phone, preferredBarberId, serviceIds, avatar, status } = req.body;
+
+    const token = await QueueToken.findById(id);
+    if (!token) {
+      return res.status(404).json({ success: false, message: 'Queue spot not found' });
+    }
+
+    if (customerName && customerName.trim()) {
+      token.customerName = customerName.trim();
+    }
+
+    if (phone !== undefined) {
+      const cleanPhone = (phone || '').replace(/\D/g, '');
+      if (cleanPhone.length !== 10) {
+        return res.status(400).json({ success: false, message: 'Phone number must be exactly 10 digits' });
+      }
+      token.phone = cleanPhone;
+    }
+
+    if (avatar !== undefined) {
+      token.avatar = avatar.trim();
+    }
+
+    if (preferredBarberId !== undefined) {
+      if (!preferredBarberId) {
+        token.preferredBarber = null;
+        token.preferredBarberName = 'Any barber (fastest)';
+      } else {
+        const barber = await Barber.findById(preferredBarberId);
+        if (barber) {
+          token.preferredBarber = barber._id;
+          token.preferredBarberName = barber.name;
+        }
+      }
+    }
+
+    if (serviceIds && Array.isArray(serviceIds) && serviceIds.length > 0) {
+      const dbServices = await Service.find({ _id: { $in: serviceIds } });
+      if (dbServices.length > 0) {
+        token.services = dbServices.map(s => ({
+          serviceId: s._id,
+          name: s.name,
+          duration: s.duration,
+          price: s.price
+        }));
+        token.totalDuration = token.services.reduce((sum, s) => sum + s.duration, 0);
+        token.totalPrice = token.services.reduce((sum, s) => sum + s.price, 0);
+      }
+    }
+
+    if (status && ['Waiting', 'Called', 'In chair', 'Done', 'Cancelled', 'No-show'].includes(status)) {
+      token.status = status;
+      if (status === 'Cancelled') token.cancelledAt = new Date();
+      if (status === 'Done') token.completedAt = new Date();
+      if (status === 'No-show') token.noShowAt = new Date();
+    }
+
+    await token.save();
+    emitQueueChange(req, 'queue:updated', { token });
+
+    return res.json({
+      success: true,
+      message: 'Queue guest updated successfully',
+      token
+    });
+  } catch (error) {
+    console.error('Error in updateQueueToken:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Staff: Delete customer queue token (CRUD - Delete)
+ */
+export const deleteQueueToken = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const token = await QueueToken.findById(id);
+    if (!token) {
+      return res.status(404).json({ success: false, message: 'Queue spot not found' });
+    }
+
+    if (token.assignedBarber) {
+      await Barber.findByIdAndUpdate(token.assignedBarber, {
+        status: 'Available',
+        currentCustomer: {
+          tokenId: null,
+          tokenNumber: null,
+          customerName: null,
+          services: [],
+          startedAt: null,
+          estimatedDuration: 0
+        }
+      });
+    }
+
+    await QueueToken.findByIdAndDelete(id);
+
+    emitQueueChange(req, 'queue:updated');
+
+    return res.json({
+      success: true,
+      message: `Token ${token.tokenNumber} (${token.customerName}) removed from queue.`
+    });
+  } catch (error) {
+    console.error('Error in deleteQueueToken:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Upload customer avatar
+ */
+export const uploadCustomerAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image file uploaded' });
+    }
+
+    const result = await uploadToCloudinary(req.file.buffer, 'customer_avatars');
+    return res.json({
+      success: true,
+      url: result.secure_url,
+      publicId: result.public_id
+    });
+  } catch (error) {
+    console.error('Error in uploadCustomerAvatar:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };

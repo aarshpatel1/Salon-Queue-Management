@@ -4,6 +4,9 @@ import apiRequest from '../api/apiClient';
 import { useSocket } from '../context/SocketContext';
 import { useToast } from '../context/ToastContext';
 import ServiceModal from '../components/ServiceModal';
+import BarberModal from '../components/BarberModal';
+import Avatar from '../components/Avatar';
+import CustomModal from '../components/CustomModal';
 
 export default function AdminSettings() {
   const { lastSyncTime } = useSocket();
@@ -14,7 +17,9 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
   const [serviceToEdit, setServiceToEdit] = useState(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const [barberModalOpen, setBarberModalOpen] = useState(false);
+  const [barberToEdit, setBarberToEdit] = useState(null);
+  const [barberToDelete, setBarberToDelete] = useState(null);
   const [updating, setUpdating] = useState(false);
 
   // Settings form states
@@ -22,7 +27,6 @@ export default function AdminSettings() {
   const [closingTime, setClosingTime] = useState('21:00');
   const [cutoffMins, setCutoffMins] = useState(30);
   const [staffPin, setStaffPin] = useState('1234');
-  const [bannerImage, setBannerImage] = useState('');
 
   const fetchAdminData = async () => {
     try {
@@ -39,7 +43,6 @@ export default function AdminSettings() {
           setClosingTime(cfg.closingTime || '21:00');
           setCutoffMins(cfg.onlineJoiningCutoffMinutes || 30);
           setStaffPin(cfg.staffPin || '1234');
-          setBannerImage(cfg.bannerImage || '');
         }
       }
 
@@ -82,6 +85,23 @@ export default function AdminSettings() {
     }
   };
 
+  // Delete Barber
+  const handleConfirmDeleteBarber = async () => {
+    if (!barberToDelete) return;
+    try {
+      const res = await apiRequest(`/api/barbers/${barberToDelete._id}`, {
+        method: 'DELETE'
+      });
+      if (res.success) {
+        addToast(`Stylist ${barberToDelete.name} removed successfully`, 'info');
+        setBarberToDelete(null);
+        fetchAdminData();
+      }
+    } catch (err) {
+      addToast(err.message || 'Failed to remove stylist', 'error');
+    }
+  };
+
   // Toggle Service Active/Inactive
   const handleToggleServiceActive = async (serviceId) => {
     try {
@@ -93,7 +113,7 @@ export default function AdminSettings() {
     }
   };
 
-  // Save General Salon Settings
+  // Save General Salon Settings (Studio branding & defaults without image upload)
   const handleSaveSettings = async (e) => {
     e.preventDefault();
     setUpdating(true);
@@ -104,8 +124,7 @@ export default function AdminSettings() {
           salonName,
           closingTime,
           onlineJoiningCutoffMinutes: cutoffMins,
-          staffPin,
-          bannerImage
+          staffPin
         })
       });
       addToast('Salon studio settings saved successfully!', 'success');
@@ -114,37 +133,6 @@ export default function AdminSettings() {
       addToast(err.message || 'Failed to save settings', 'error');
     } finally {
       setUpdating(false);
-    }
-  };
-
-  // Cloudinary Banner Image Upload
-  const handleImageFileChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadingImage(true);
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const res = await apiRequest('/api/admin/upload-image', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (res.success && res.url) {
-        setBannerImage(res.url);
-        await apiRequest('/api/admin/settings', {
-          method: 'POST',
-          body: JSON.stringify({ bannerImage: res.url })
-        });
-        addToast('Studio image uploaded to Cloudinary!', 'success');
-        fetchAdminData();
-      }
-    } catch (err) {
-      addToast(err.message || 'Failed to upload image', 'error');
-    } finally {
-      setUploadingImage(false);
     }
   };
 
@@ -271,7 +259,7 @@ export default function AdminSettings() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Service Manager */}
         <div className="lg:col-span-7 bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-4 animate-fade-in-up stagger-3">
-          <div className="flex items-center justify-between border-b border-[#E4DBD0] pb-3">
+          <div className="flex items-center justify-between pb-1">
             <div>
               <h2 className="text-base font-black text-[#1C1A18] flex items-center gap-2">
                 <Icon icon="solar:scissors-bold" className="w-5 h-5 text-[#4A4540]" />
@@ -341,63 +329,96 @@ export default function AdminSettings() {
           </div>
         </div>
 
-        {/* Right: Barbers on duty today toggles */}
+        {/* Right: Stylists & Barber Management */}
         <div className="lg:col-span-5 bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-4 animate-fade-in-up stagger-4">
-          <div className="border-b border-[#E4DBD0] pb-3">
-            <h2 className="text-base font-black text-[#1C1A18] flex items-center gap-2">
-              <Icon icon="solar:users-group-rounded-bold" className="w-5 h-5 text-[#4A4540]" />
-              <span>Stylists On Duty Today</span>
-            </h2>
-            <p className="text-xs text-[#4A4540]">Toggle active roster for queue distribution</p>
+          <div className="flex items-center justify-between pb-1">
+            <div>
+              <h2 className="text-base font-black text-[#1C1A18] flex items-center gap-2">
+                <Icon icon="solar:users-group-rounded-bold" className="w-5 h-5 text-[#4A4540]" />
+                <span>Barber & Stylist Roster</span>
+              </h2>
+              <p className="text-xs text-[#4A4540]">Add, edit, delete or toggle duty status</p>
+            </div>
+            <button
+              onClick={() => {
+                setBarberToEdit(null);
+                setBarberModalOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold bg-[#1C1A18] hover:bg-[#4A4540] text-[#F7F3EE] cursor-pointer shadow-xs"
+            >
+              <Icon icon="solar:user-plus-bold" className="w-3.5 h-3.5 text-[#C2B4A3]" />
+              <span>Add Stylist</span>
+            </button>
           </div>
 
           <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin">
             {barbers.map((barber) => (
               <div
                 key={barber._id}
-                className="p-3.5 rounded-full border border-[#E4DBD0] bg-[#FFFFFF] flex items-center justify-between px-4"
+                className="p-3 rounded-full border border-[#E4DBD0] bg-[#FFFFFF] flex items-center justify-between px-3.5"
               >
-                <div className="flex items-center gap-3">
-                  <img
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar
                     src={barber.avatar}
-                    alt={barber.name}
-                    className="w-10 h-10 rounded-full object-cover border border-[#C2B4A3] shrink-0"
+                    name={barber.name}
+                    size="md"
                   />
-                  <div>
-                    <p className="text-xs font-black text-[#1C1A18]">{barber.name}</p>
-                    <p className="text-[10px] text-[#4A4540]">{barber.status}</p>
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-[#1C1A18] truncate">{barber.name}</p>
+                    <p className="text-[10px] text-[#4A4540] truncate">{barber.specialty || barber.status}</p>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => handleToggleDuty(barber._id)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-black border transition-all cursor-pointer ${
-                    barber.isOnDuty
-                      ? 'bg-[#1C1A18] text-[#F7F3EE] border-[#1C1A18]'
-                      : 'bg-[#F7F3EE] text-[#4A4540] border-[#E4DBD0]'
-                  }`}
-                >
-                  {barber.isOnDuty ? 'On Duty' : 'Off Duty'}
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  <button
+                    onClick={() => {
+                      setBarberToEdit(barber);
+                      setBarberModalOpen(true);
+                    }}
+                    title="Edit Stylist"
+                    className="w-7 h-7 rounded-full bg-[#F7F3EE] hover:bg-[#E4DBD0] border border-[#E4DBD0] flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <Icon icon="solar:pen-bold" className="w-3.5 h-3.5 text-[#1C1A18]" />
+                  </button>
+
+                  <button
+                    onClick={() => setBarberToDelete(barber)}
+                    title="Delete Stylist"
+                    className="w-7 h-7 rounded-full bg-[#F7F3EE] hover:bg-[#ef4444]/20 border border-[#E4DBD0] text-[#4A4540] hover:text-[#ef4444] flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <Icon icon="solar:trash-bin-trash-bold" className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
+                    onClick={() => handleToggleDuty(barber._id)}
+                    className={`px-3.5 py-1 rounded-full text-[11px] font-black border transition-all cursor-pointer ${
+                      barber.isOnDuty
+                        ? 'bg-[#1C1A18] text-[#F7F3EE] border-[#1C1A18]'
+                        : 'bg-[#F7F3EE] text-[#4A4540] border-[#E4DBD0]'
+                    }`}
+                  >
+                    {barber.isOnDuty ? 'On Duty' : 'Off Duty'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Salon General Configurations & Cloudinary Image Upload in Pill Card */}
-      <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-5 animate-fade-in-up stagger-5">
-        <div className="border-b border-[#E4DBD0] pb-3">
+      {/* Salon General Configurations in Pill Card (Image Upload Removed) */}
+      <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-8 border border-[#E4DBD0] shadow-xs space-y-4 animate-fade-in-up stagger-5">
+        <div className="pb-1">
           <h2 className="text-base font-black text-[#1C1A18] flex items-center gap-2">
             <Icon icon="solar:shield-check-bold" className="w-5 h-5 text-[#4A4540]" />
             <span>Salon Branding & Queue Defaults</span>
           </h2>
           <p className="text-xs text-[#4A4540]">
-            Configure default closing time, online joining cutoff, and staff PIN
+            Configure salon name, default closing time, online joining cutoff, and staff PIN
           </p>
         </div>
 
-        <form onSubmit={handleSaveSettings} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <form onSubmit={handleSaveSettings} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-[11px] font-black text-[#4A4540] uppercase tracking-wider mb-1.5 pl-3">
               Salon Name
@@ -424,7 +445,7 @@ export default function AdminSettings() {
 
           <div>
             <label className="block text-[11px] font-black text-[#4A4540] uppercase tracking-wider mb-1.5 pl-3">
-              Online Cutoff (Mins before close)
+              Online Cutoff (Mins)
             </label>
             <input
               type="number"
@@ -449,32 +470,7 @@ export default function AdminSettings() {
             />
           </div>
 
-          <div className="md:col-span-2">
-            <label className="block text-[11px] font-black text-[#4A4540] uppercase tracking-wider mb-1.5 pl-3">
-              Banner Image URL (or upload via Cloudinary)
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={bannerImage}
-                onChange={(e) => setBannerImage(e.target.value)}
-                placeholder="https://images.unsplash.com/..."
-                className="flex-1 px-5 py-3 rounded-full border border-[#E4DBD0] bg-[#F7F3EE] text-xs font-medium text-[#1C1A18] focus:outline-none focus:border-[#1C1A18] focus:bg-white transition-all"
-              />
-              <label className="px-6 py-3 rounded-full bg-[#1C1A18] text-[#F7F3EE] font-bold text-xs cursor-pointer hover:bg-[#4A4540] transition-colors flex items-center gap-2 shrink-0">
-                <Icon icon="solar:upload-bold" className="w-4 h-4 text-[#C2B4A3]" />
-                <span>{uploadingImage ? 'Uploading...' : 'Upload'}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageFileChange}
-                  className="hidden"
-                />
-              </label>
-            </div>
-          </div>
-
-          <div className="md:col-span-3 pt-2">
+          <div className="sm:col-span-2 lg:col-span-4 pt-1">
             <button
               type="submit"
               disabled={updating}
@@ -493,6 +489,46 @@ export default function AdminSettings() {
         onSaved={fetchAdminData}
         service={serviceToEdit}
       />
+
+      {/* Barber Modal */}
+      <BarberModal
+        isOpen={barberModalOpen}
+        onClose={() => setBarberModalOpen(false)}
+        onSaved={fetchAdminData}
+        barber={barberToEdit}
+      />
+
+      {/* Delete Barber Confirmation Modal */}
+      <CustomModal
+        isOpen={!!barberToDelete}
+        onClose={() => setBarberToDelete(null)}
+        title="Remove Stylist"
+        subtitle={barberToDelete ? barberToDelete.name : ''}
+        icon="solar:danger-triangle-bold"
+        maxWidth="max-w-sm"
+      >
+        <div className="space-y-4 text-xs">
+          <p className="text-[#1C1A18] text-sm leading-relaxed font-medium">
+            Are you sure you want to remove stylist <strong>{barberToDelete?.name}</strong> from the studio roster?
+          </p>
+          <div className="flex items-center justify-end gap-2.5 pt-2">
+            <button
+              type="button"
+              onClick={() => setBarberToDelete(null)}
+              className="px-5 py-2.5 rounded-full border border-[#E4DBD0] text-[#1C1A18] font-bold text-xs hover:bg-[#F7F3EE] transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmDeleteBarber}
+              className="px-5 py-2.5 rounded-full bg-[#ef4444] text-white font-bold text-xs hover:bg-[#dc2626] transition-colors cursor-pointer"
+            >
+              Confirm Remove
+            </button>
+          </div>
+        </div>
+      </CustomModal>
     </div>
   );
 }

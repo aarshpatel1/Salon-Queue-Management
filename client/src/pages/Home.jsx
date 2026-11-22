@@ -5,6 +5,7 @@ import apiRequest from "../api/apiClient";
 import { useSocket } from "../context/SocketContext";
 import CustomerProfileModal from "../components/CustomerProfileModal";
 import RealTimeTimeline from "../components/RealTimeTimeline";
+import Avatar from "../components/Avatar";
 
 export default function Home() {
 	const { lastSyncTime } = useSocket();
@@ -245,7 +246,7 @@ export default function Home() {
 
 			{/* Stylist Stations in Floating Pill Cards */}
 			<div className="bg-[#FFFFFF] p-6 md:p-8 rounded-[36px] border border-[#E4DBD0] shadow-xs space-y-4 animate-fade-in-up stagger-5">
-				<div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E4DBD0] pb-3">
+				<div className="flex flex-wrap items-center justify-between gap-3 pb-2 mb-1">
 					<div>
 						<h2 className="text-base font-black text-[#1C1A18] flex items-center gap-2">
 							<Icon
@@ -282,10 +283,11 @@ export default function Home() {
 							>
 								<div>
 									<div className="flex items-center gap-3 mb-3">
-										<img
+										<Avatar
 											src={barber.avatar}
-											alt={barber.name}
-											className="w-10 h-10 rounded-full object-cover border border-[#C2B4A3] shrink-0"
+											name={barber.name}
+											size="w-10 h-10 text-xs"
+											className="border border-[#C2B4A3] shrink-0"
 										/>
 										<div className="min-w-0 flex-1">
 											<p className="font-black text-xs text-[#1C1A18] truncate">
@@ -339,7 +341,7 @@ export default function Home() {
 
 			{/* Live Waiting Queue in Floating Pill Capsules */}
 			<div className="bg-[#FFFFFF] p-6 md:p-8 rounded-[36px] border border-[#E4DBD0] shadow-xs space-y-4 animate-fade-in-up stagger-6">
-				<div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E4DBD0] pb-3">
+				<div className="flex flex-wrap items-center justify-between gap-3 pb-2 mb-1">
 					<div>
 						<h2 className="text-base font-black text-[#1C1A18] flex items-center gap-2">
 							<Icon
@@ -399,6 +401,12 @@ export default function Home() {
 										<span className="text-xs font-black text-[#F7F3EE] bg-[#1C1A18] px-3 py-1 rounded-full shrink-0">
 											{token.tokenNumber}
 										</span>
+										<Avatar
+											src={token.avatar}
+											name={token.customerName}
+											size="w-8 h-8 text-[11px]"
+											className="border border-[#C2B4A3] shrink-0"
+										/>
 										<div className="min-w-0">
 											<p className="text-xs font-black text-[#1C1A18] truncate">
 												{token.customerName}
@@ -423,7 +431,7 @@ export default function Home() {
 
 			{/* Screen Directory in Pill Island */}
 			<div className="bg-[#1C1A18] rounded-[36px] p-6 md:p-8 text-[#F7F3EE] border border-[#4A4540] shadow-xl animate-fade-in-up stagger-7">
-				<div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 border-b border-[#4A4540]/50 pb-3">
+				<div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6 pb-1">
 					<div>
 						<h3 className="text-base font-black">Studio Screen Directory</h3>
 						<p className="text-xs text-[#C2B4A3]">
