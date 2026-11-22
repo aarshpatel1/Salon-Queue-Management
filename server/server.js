@@ -15,6 +15,8 @@ import queueRoutes from './routes/queueRoutes.js';
 import barberRoutes from './routes/barberRoutes.js';
 import serviceRoutes from './routes/serviceRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import keepAliveRoutes from './routes/keepAliveRoutes.js';
+import { startKeepAlive, getKeepAliveStats } from './utils/keepAlive.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -47,12 +49,17 @@ app.use('/api/queue', queueRoutes);
 app.use('/api/barbers', barberRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/keep-alive', keepAliveRoutes);
+
+// Quick ping endpoint
+app.get('/api/ping', (req, res) => res.status(200).send('pong'));
 
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    keepAlive: getKeepAliveStats()
   });
 });
 
@@ -90,6 +97,8 @@ function getNetworkIps() {
 }
 
 // Initialize Server & Database
+let stopKeepAlive = null;
+
 const startServer = async () => {
   await connectDB();
   await seedDatabase();
@@ -102,7 +111,22 @@ const startServer = async () => {
       console.log(`   ➜ Network: http://${ip}:${PORT}`);
     });
     console.log(`📡 Real-Time Socket.io sync active (0.0.0.0:${PORT})\n`);
+
+    // Start background keep-alive runner every 30s for Render.com
+    stopKeepAlive = startKeepAlive(PORT);
   });
 };
+
+const shutdown = () => {
+  console.log('\n[Server] Gracefully shutting down...');
+  if (stopKeepAlive) stopKeepAlive();
+  server.close(() => {
+    console.log('[Server] HTTP and Socket server closed.');
+    process.exit(0);
+  });
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
 
 startServer();
