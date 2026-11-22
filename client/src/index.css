@@ -148,45 +148,73 @@ aside::-webkit-scrollbar-thumb:hover {
   animation: islandPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Dynamic Island Fluid Morph Transitions - Fast yet silky smooth height expansion */
-@keyframes dynamicIslandGrowToModal {
-  0% {
-    opacity: 0.85;
-    transform: translateY(calc(50vh - 60px)) scaleX(0.7) scaleY(0.12);
-    border-radius: 9999px;
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(10px) scaleX(0.96) scaleY(0.85);
-    border-radius: 44px;
-  }
-  80% {
-    transform: translateY(-4px) scaleX(1.01) scaleY(1.02);
-    border-radius: 38px;
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    border-radius: 36px;
-  }
+/* Floating Bottom Bar expanding directly into Modal (Size & Height Transformation) */
+.floating-bottom-island {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92vw, 420px);
+  height: 56px;
+  border-radius: 9999px;
+  background-color: #1C1A18;
+  color: #F7F3EE;
+  border: 1px solid #4A4540;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  cursor: pointer;
+  z-index: 50;
+  transition: 
+    width 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+    height 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+    bottom 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+    border-radius 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+    background-color 0.3s ease;
+  will-change: width, height, bottom, border-radius;
 }
 
-@keyframes dynamicIslandShrinkFromModal {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    border-radius: 36px;
-  }
-  40% {
-    opacity: 0.95;
-    transform: translateY(16px) scaleX(0.95) scaleY(0.7);
-    border-radius: 44px;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(calc(50vh - 60px)) scaleX(0.7) scaleY(0.12);
-    border-radius: 9999px;
-  }
+.floating-bottom-island.is-expanded {
+  bottom: 18px;
+  width: min(94vw, 470px);
+  height: min(84vh, 580px);
+  border-radius: 32px;
+  cursor: default;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65);
+}
+
+.floating-bottom-island .compact-bar-view {
+  height: 56px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.floating-bottom-island.is-expanded .compact-bar-view {
+  opacity: 0;
+  pointer-events: none;
+  display: none;
+}
+
+.floating-bottom-island .expanded-modal-view {
+  opacity: 0;
+  pointer-events: none;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+  overflow: hidden;
+  transition: opacity 0.25s cubic-bezier(0.32, 0.72, 0, 1) 0.1s;
+}
+
+.floating-bottom-island.is-expanded .expanded-modal-view {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 @keyframes dynamicPillSpring {

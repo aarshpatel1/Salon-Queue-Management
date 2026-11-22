@@ -1,4 +1,5 @@
 import Service from '../models/Service.js';
+import QueueToken from '../models/QueueToken.js';
 
 export const getServices = async (req, res) => {
   try {
@@ -83,6 +84,43 @@ export const toggleServiceActive = async (req, res) => {
 
     return res.json({ success: true, service });
   } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteService = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const service = await Service.findById(id);
+
+    if (!service) {
+      return res.status(404).json({ success: false, message: 'Service not found' });
+    }
+
+    // Check if active queue tokens (Waiting, Called, In chair) are using this service
+    const activeTokenWithService = await QueueToken.findOne({
+      status: { $in: ['Waiting', 'Called', 'In chair'] },
+      'services.serviceId': id
+    });
+
+    if (activeTokenWithService) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot delete service because it is currently requested by active customer (Token ${activeTokenWithService.tokenNumber}). You can disable it instead.`
+      });
+    }
+
+    await Service.findByIdAndDelete(id);
+
+    const io = req.app.get('io');
+    if (io) io.emit('queue:updated');
+
+    return res.json({
+      success: true,
+      message: `Service '${service.name}' removed successfully`
+    });
+  } catch (error) {
+    console.error('Error deleting service:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };

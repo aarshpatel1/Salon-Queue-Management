@@ -184,9 +184,11 @@ Staff have complete control over waiting queue records:
 
 ## 4. UI/UX & Design Philosophy
 
-### Dynamic Island Upward Modal Morphing
-- When clicking the bottom Dynamic Island, the element does not snap or open a disjointed popup.
-- Instead, it smoothly expands upwards (`animate-island-grow-modal`), creating the organic illusion that the island itself grew into the full modal card. Closing it reverses the animation (`animate-island-shrink-modal`).
+### Dynamic Island Bottom Bar Height Expansion to Modal
+- Instead of opening a separate popup in the center of the screen, the floating bar at the bottom is a single morphing container.
+- When clicked, it stays anchored at the bottom (`bottom: 18px;`) while its height smoothly expands upward from `56px` to `min(84vh, 580px)` and its width gently expands to `470px` using a fluid spring transition (`cubic-bezier(0.32, 0.72, 0, 1)`).
+- The compact bar header smoothly cross-fades into the full ticket modal content with live timer, queue ranking, stylist details, and opt-out options.
+- Clicking the close button, the "Minimize" action, the background overlay, or pressing Escape collapses the modal height back down into the compact bottom bar.
 
 ### Button-to-Modal Transformation Animation
 - Every interactive button that triggers a modal (e.g., "+ Join Queue", "+ Add Walk-in", "Edit Stylist") utilizes `@keyframes modalPopFromButton` (`animate-modal-pop`), scaling outward smoothly from the interaction point.

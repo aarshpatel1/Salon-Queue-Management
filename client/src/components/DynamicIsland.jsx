@@ -11,7 +11,6 @@ export default function DynamicIsland() {
   const [tokenId, setTokenId] = useState(() => localStorage.getItem('elan_active_token_id'));
   const [tokenData, setTokenData] = useState(null);
   const [expanded, setExpanded] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
   const [showOptOutConfirm, setShowOptOutConfirm] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -100,30 +99,24 @@ export default function DynamicIsland() {
   }
 
   // Smooth collapse back to bottom pill
-  const handleCollapse = () => {
-    if (isClosing) return;
-    setIsClosing(true);
+  const handleCollapse = (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
     setShowOptOutConfirm(false);
-    setTimeout(() => {
-      setExpanded(false);
-      setIsClosing(false);
-    }, 200);
+    setExpanded(false);
   };
 
   const handleOpen = () => {
-    setIsClosing(false);
     setShowOptOutConfirm(false);
     setExpanded(true);
   };
 
   const handleDismiss = (e) => {
-    if (e) e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     localStorage.removeItem('elan_active_token_id');
     window.dispatchEvent(new Event('elan_token_updated'));
     setTokenId(null);
     setTokenData(null);
     setExpanded(false);
-    setIsClosing(false);
     setShowOptOutConfirm(false);
   };
 
@@ -142,144 +135,142 @@ export default function DynamicIsland() {
 
   return (
     <>
-      {/* Floating Status Bar at Bottom Center of the Section (Without Sidebar) */}
+      {/* Darkened Background Backdrop Overlay */}
       <div
-        className={`absolute bottom-6 left-1/2 -translate-x-1/2 z-40 select-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          expanded
-            ? 'opacity-0 scale-75 pointer-events-none translate-y-4'
-            : 'opacity-100 scale-100 pointer-events-auto translate-y-0 animate-pill-spring'
+        className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-xs transition-opacity duration-350 ease-out ${
+          expanded ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
+        onClick={handleCollapse}
+      />
+
+      {/* Floating Bottom Bar that expands directly into Modal via height/size transformation */}
+      <div
+        role="dialog"
+        aria-expanded={expanded}
+        onClick={!expanded ? handleOpen : undefined}
+        className={`floating-bottom-island select-none ${expanded ? 'is-expanded' : ''}`}
       >
-        <div
-          onClick={handleOpen}
-          className="flex items-center gap-3 px-4 py-2 bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] rounded-full shadow-2xl cursor-pointer hover:border-[#C2B4A3] transition-all transform hover:-translate-y-0.5 active:scale-95"
-        >
+        {/* Compact Bar View (Visible when collapsed) */}
+        <div className="compact-bar-view">
           {/* Customer Avatar & Pulsing Status */}
-          <div className="relative shrink-0">
-            <Avatar src={token.avatar} name={token.customerName} size="xs" />
-            <span
-              className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-[#1C1A18] ${
-                token.status === 'In chair'
-                  ? 'bg-[#22c55e]'
-                  : token.status === 'Called'
-                  ? 'bg-[#E4DBD0]'
-                  : 'bg-[#C2B4A3]'
-              }`}
-            />
-          </div>
-
-          {/* Token Pill Badge */}
-          <span className="bg-[#F7F3EE] text-[#1C1A18] px-2.5 py-0.5 rounded-full text-xs font-black tracking-wider">
-            {token.tokenNumber}
-          </span>
-
-          {/* Customer & Status Text with Live Timer */}
-          <div className="flex items-center gap-2 text-xs">
-            <span className="font-bold text-[#F7F3EE] max-w-[90px] sm:max-w-[130px] truncate">
-              {token.customerName}
-            </span>
-            <span className="text-[#4A4540]">•</span>
-            {token.status === 'Waiting' ? (
-              <div className="flex items-center gap-2">
-                <span className="text-[#E4DBD0] font-semibold whitespace-nowrap">
-                  #{queuePos} in line
-                </span>
-                <span className="text-[#4A4540] hidden sm:inline">•</span>
-                <span className="inline-flex items-center gap-1.5 font-mono font-bold text-[#F7F3EE] bg-[#4A4540]/40 px-2.5 py-0.5 rounded-full border border-[#4A4540]/60">
-                  <Icon icon="solar:clock-circle-bold" className="w-3.5 h-3.5 text-[#C2B4A3]" />
-                  <span>{formatTimer(waitTimerSeconds)}</span>
-                </span>
-              </div>
-            ) : token.status === 'Called' ? (
-              <span className="text-[#F7F3EE] font-black animate-pulse flex items-center gap-1.5">
-                <Icon icon="solar:bell-bing-bold" className="w-3.5 h-3.5 text-[#C2B4A3]" />
-                <span>Proceed to Chair!</span>
-              </span>
-            ) : token.status === 'In chair' ? (
-              <div className="flex items-center gap-2">
-                <span className="text-[#22c55e] font-black whitespace-nowrap">
-                  In Chair
-                </span>
-                <span className="text-[#4A4540]">•</span>
-                <span className="inline-flex items-center gap-1.5 font-mono font-bold text-[#22c55e] bg-[#22c55e]/15 px-2.5 py-0.5 rounded-full border border-[#22c55e]/30">
-                  <Icon icon="solar:stopwatch-bold" className="w-3.5 h-3.5 text-[#22c55e]" />
-                  <span>{formatTimer(inChairSeconds)}</span>
-                </span>
-              </div>
-            ) : (
-              <span className="text-[#C2B4A3] font-semibold">{token.status}</span>
-            )}
-          </div>
-
-          {/* Maximize Pill Icon */}
-          <div className="w-6 h-6 rounded-full bg-[#4A4540]/50 flex items-center justify-center shrink-0">
-            <Icon icon="solar:maximize-square-minimalistic-bold" className="w-3.5 h-3.5 text-[#E4DBD0]" />
-          </div>
-
-          {isDone && (
-            <button
-              onClick={handleDismiss}
-              title="Close finished ticket"
-              className="p-1 text-[#C2B4A3] hover:text-[#F7F3EE] cursor-pointer ml-1"
-            >
-              <Icon icon="solar:close-circle-bold" className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Expanded Live Queue Ticket Modal with Fluid Dynamic Island Height Increase Transformation */}
-      {(expanded || isClosing) && (
-        <div
-          className={`fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-transparent select-none transition-opacity duration-200 ease-out ${
-            isClosing ? 'opacity-0' : 'opacity-100 animate-in fade-in duration-150'
-          }`}
-          onClick={handleCollapse}
-        >
-          <div
-            className={`w-full max-w-md rounded-[36px] bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] p-6 shadow-2xl space-y-4 ${
-              isClosing ? 'animate-island-shrink-modal' : 'animate-island-grow-modal'
-            }`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header with Ticket Title and Customer Avatar */}
-            <div className="flex items-center justify-between pb-1">
-              <div className="flex items-center gap-3">
-                <Avatar src={token.avatar} name={token.customerName} size="md" />
-                <div>
-                  <h3 className="font-extrabold text-sm text-[#F7F3EE] uppercase tracking-wider">
-                    Live Queue Ticket
-                  </h3>
-                  <p className="text-[10px] text-[#C2B4A3]">Live Queue Status • Élan Atelier</p>
-                </div>
-              </div>
-
-              <button
-                onClick={handleCollapse}
-                className="w-8 h-8 rounded-full bg-[#4A4540]/40 text-[#C2B4A3] hover:text-[#F7F3EE] flex items-center justify-center cursor-pointer transition-colors"
-              >
-                <Icon icon="solar:close-circle-bold" className="w-5 h-5" />
-              </button>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="relative shrink-0">
+              <Avatar src={token.avatar} name={token.customerName} size="xs" />
+              <span
+                className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-[#1C1A18] ${
+                  token.status === 'In chair'
+                    ? 'bg-[#22c55e]'
+                    : token.status === 'Called'
+                    ? 'bg-[#E4DBD0]'
+                    : 'bg-[#C2B4A3]'
+                }`}
+              />
             </div>
 
+            {/* Token Pill Badge */}
+            <span className="bg-[#F7F3EE] text-[#1C1A18] px-2.5 py-0.5 rounded-full text-xs font-black tracking-wider shrink-0">
+              {token.tokenNumber}
+            </span>
+
+            {/* Customer & Status Text with Live Timer */}
+            <div className="flex items-center gap-1.5 text-xs truncate">
+              <span className="font-bold text-[#F7F3EE] truncate max-w-[85px] sm:max-w-[120px]">
+                {token.customerName}
+              </span>
+              <span className="text-[#4A4540]">•</span>
+              {token.status === 'Waiting' ? (
+                <div className="flex items-center gap-1.5 truncate">
+                  <span className="text-[#E4DBD0] font-semibold text-[11px] whitespace-nowrap">
+                    #{queuePos}
+                  </span>
+                  <span className="inline-flex items-center gap-1 font-mono font-bold text-[#F7F3EE] bg-[#4A4540]/40 px-2 py-0.5 rounded-full border border-[#4A4540]/60 text-[11px]">
+                    <Icon icon="solar:clock-circle-bold" className="w-3 h-3 text-[#C2B4A3]" />
+                    <span>{formatTimer(waitTimerSeconds)}</span>
+                  </span>
+                </div>
+              ) : token.status === 'Called' ? (
+                <span className="text-[#F7F3EE] font-black animate-pulse flex items-center gap-1 text-[11px]">
+                  <Icon icon="solar:bell-bing-bold" className="w-3 h-3 text-[#C2B4A3]" />
+                  <span>To Chair!</span>
+                </span>
+              ) : token.status === 'In chair' ? (
+                <div className="flex items-center gap-1.5 truncate">
+                  <span className="text-[#22c55e] font-black text-[11px]">In Chair</span>
+                  <span className="font-mono font-bold text-[#22c55e] bg-[#22c55e]/15 px-2 py-0.5 rounded-full text-[11px]">
+                    {formatTimer(inChairSeconds)}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-[#C2B4A3] text-[11px] font-semibold">{token.status}</span>
+              )}
+            </div>
+          </div>
+
+          {/* Expand Arrow / Maximize Icon */}
+          <div className="flex items-center gap-1 shrink-0 ml-2">
+            <div className="w-6 h-6 rounded-full bg-[#4A4540]/50 flex items-center justify-center text-[#E4DBD0] hover:bg-[#4A4540] transition-colors">
+              <Icon icon="solar:alt-arrow-up-bold" className="w-3.5 h-3.5" />
+            </div>
+            {isDone && (
+              <button
+                onClick={handleDismiss}
+                title="Close finished ticket"
+                className="p-1 text-[#C2B4A3] hover:text-[#F7F3EE] cursor-pointer"
+              >
+                <Icon icon="solar:close-circle-bold" className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Expanded Modal View (Transforms directly by growing from the bottom bar) */}
+        <div className="expanded-modal-view" onClick={(e) => e.stopPropagation()}>
+          {/* Modal Header */}
+          <div className="flex items-center justify-between pb-3 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <Avatar src={token.avatar} name={token.customerName} size="md" />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-extrabold text-sm text-[#F7F3EE] uppercase tracking-wider truncate">
+                    Live Queue Ticket
+                  </h3>
+                  <span className="bg-[#F7F3EE] text-[#1C1A18] px-2 py-0.5 rounded-full text-[10px] font-black shrink-0">
+                    {token.tokenNumber}
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#C2B4A3] truncate">{token.customerName} • Élan Atelier</p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleCollapse}
+              aria-label="Close modal"
+              className="w-8 h-8 rounded-full bg-[#4A4540]/40 text-[#C2B4A3] hover:text-[#F7F3EE] hover:bg-[#4A4540]/80 flex items-center justify-center cursor-pointer transition-colors shrink-0"
+            >
+              <Icon icon="solar:close-circle-bold" className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Scrollable Content Body */}
+          <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 scrollbar-thin">
             {/* Main Wait Pill Card */}
-            <div className="p-5 rounded-[28px] bg-[#4A4540]/25 border border-[#4A4540]/60 text-center space-y-2">
-              <span className="inline-block bg-[#F7F3EE] text-[#1C1A18] text-xs font-black px-4 py-1 rounded-full mb-1">
+            <div className="p-4 rounded-[28px] bg-[#4A4540]/25 border border-[#4A4540]/60 text-center space-y-1.5">
+              <span className="inline-block bg-[#F7F3EE] text-[#1C1A18] text-xs font-black px-4 py-0.5 rounded-full mb-1">
                 Token {token.tokenNumber}
               </span>
-              <h4 className="text-xl font-black text-[#F7F3EE]">
+              <h4 className="text-lg font-black text-[#F7F3EE]">
                 {token.customerName}
               </h4>
 
               {token.status === 'Waiting' ? (
-                <div className="pt-2">
+                <div className="pt-1">
                   <p className="text-3xl font-black font-mono text-[#F7F3EE]">
                     {formatTimer(waitTimerSeconds)}
                   </p>
                   <p className="text-xs text-[#C2B4A3] mt-0.5 font-medium">
                     Estimated Wait Timer Ahead (~{waitStats?.waitMinutes ?? 0} Mins)
                   </p>
-                  <div className="mt-3 inline-flex items-center gap-2 bg-[#1C1A18] text-[#F7F3EE] px-4 py-1.5 rounded-full text-xs font-bold border border-[#4A4540]">
+                  <div className="mt-2.5 inline-flex items-center gap-2 bg-[#1C1A18] text-[#F7F3EE] px-4 py-1.5 rounded-full text-xs font-bold border border-[#4A4540]">
                     <Icon icon="solar:users-group-rounded-bold" className="w-4 h-4 text-[#C2B4A3]" />
                     <span>
                       Position #{queuePos} ({queuePos === 1 ? 'Next in line!' : `${queuePos - 1} clients ahead`})
@@ -287,8 +278,8 @@ export default function DynamicIsland() {
                   </div>
                 </div>
               ) : token.status === 'Called' ? (
-                <div className="pt-2">
-                  <p className="text-xl font-black text-[#F7F3EE] animate-pulse">
+                <div className="pt-1">
+                  <p className="text-lg font-black text-[#F7F3EE] animate-pulse">
                     Please Walk to Stylist Station!
                   </p>
                   <p className="text-xs text-[#C2B4A3] font-bold mt-1">
@@ -296,8 +287,8 @@ export default function DynamicIsland() {
                   </p>
                 </div>
               ) : token.status === 'In chair' ? (
-                <div className="pt-2">
-                  <p className="text-sm font-bold text-[#F7F3EE]">
+                <div className="pt-1">
+                  <p className="text-xs font-bold text-[#F7F3EE]">
                     Styling Session In Progress with {token.assignedBarberName || 'Stylist'}
                   </p>
                   <p className="text-2xl font-black font-mono text-[#22c55e] mt-1">
@@ -305,7 +296,7 @@ export default function DynamicIsland() {
                   </p>
                 </div>
               ) : (
-                <div className="pt-2">
+                <div className="pt-1">
                   <p className="text-sm font-bold text-[#E4DBD0]">
                     Session Status: {token.status}
                   </p>
@@ -323,13 +314,13 @@ export default function DynamicIsland() {
               />
             )}
 
-            {/* Services Pill Breakdown */}
-            <div className="p-4 rounded-[28px] bg-[#4A4540]/20 border border-[#4A4540]/50 space-y-2">
+            {/* Booked Services Breakdown */}
+            <div className="p-3.5 rounded-[24px] bg-[#4A4540]/20 border border-[#4A4540]/50 space-y-2">
               <div className="flex items-center justify-between text-xs font-bold pb-1">
                 <span className="text-[#C2B4A3] uppercase text-[10px] tracking-wider">Booked Services</span>
                 <span className="text-[#F7F3EE]">Total: ₹{token.totalPrice}</span>
               </div>
-              <div className="space-y-1.5 pt-1">
+              <div className="space-y-1.5 pt-0.5">
                 {(token.services || []).map((srv, idx) => (
                   <div key={idx} className="flex items-center justify-between text-xs">
                     <span className="text-[#E4DBD0]">{srv.name}</span>
@@ -340,8 +331,8 @@ export default function DynamicIsland() {
             </div>
 
             {/* Opt Out / Cancel Confirmation Box */}
-            {showOptOutConfirm ? (
-              <div className="p-4 rounded-[28px] bg-[#ef4444]/15 border border-[#ef4444]/40 text-center space-y-3">
+            {showOptOutConfirm && (
+              <div className="p-3.5 rounded-[24px] bg-[#ef4444]/15 border border-[#ef4444]/40 text-center space-y-2.5">
                 <p className="text-xs font-bold text-[#F7F3EE]">
                   Are you sure you want to opt out of the queue?
                 </p>
@@ -366,43 +357,43 @@ export default function DynamicIsland() {
                   </button>
                 </div>
               </div>
-            ) : null}
+            )}
+          </div>
 
-            {/* Bottom Actions */}
-            <div className="space-y-2 pt-1">
-              {isDone ? (
+          {/* Bottom Actions Area */}
+          <div className="space-y-2 pt-3 shrink-0">
+            {isDone ? (
+              <button
+                type="button"
+                onClick={handleDismiss}
+                className="w-full py-2.5 rounded-full bg-[#F7F3EE] text-[#1C1A18] font-bold text-xs hover:bg-[#E4DBD0] transition-colors cursor-pointer"
+              >
+                Clear Completed Ticket
+              </button>
+            ) : (
+              <>
                 <button
                   type="button"
-                  onClick={handleDismiss}
-                  className="w-full py-3 rounded-full bg-[#F7F3EE] text-[#1C1A18] font-bold text-xs hover:bg-[#E4DBD0] transition-colors cursor-pointer"
+                  onClick={handleCollapse}
+                  className="w-full py-2.5 rounded-full bg-[#F7F3EE] text-[#1C1A18] font-bold text-xs hover:bg-[#E4DBD0] transition-colors cursor-pointer"
                 >
-                  Clear Completed Ticket
+                  Minimize to Bottom Bar
                 </button>
-              ) : (
-                <>
+                {!showOptOutConfirm && ['Waiting', 'Called'].includes(token.status) && (
                   <button
                     type="button"
-                    onClick={handleCollapse}
-                    className="w-full py-3 rounded-full bg-[#F7F3EE] text-[#1C1A18] font-bold text-xs hover:bg-[#E4DBD0] transition-colors cursor-pointer"
+                    onClick={() => setShowOptOutConfirm(true)}
+                    className="w-full py-2 rounded-full border border-[#ef4444]/40 bg-[#ef4444]/10 hover:bg-[#ef4444]/20 text-[#ef4444] font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    Minimize to Bottom Bar
+                    <Icon icon="solar:close-circle-bold" className="w-4 h-4" />
+                    <span>Opt Out / Cancel My Turn</span>
                   </button>
-                  {!showOptOutConfirm && ['Waiting', 'Called'].includes(token.status) && (
-                    <button
-                      type="button"
-                      onClick={() => setShowOptOutConfirm(true)}
-                      className="w-full py-2.5 rounded-full border border-[#ef4444]/40 bg-[#ef4444]/10 hover:bg-[#ef4444]/20 text-[#ef4444] font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                    >
-                      <Icon icon="solar:close-circle-bold" className="w-4 h-4" />
-                      <span>Opt Out / Cancel My Turn</span>
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
+                )}
+              </>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </>
   );
 }

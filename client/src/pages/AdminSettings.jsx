@@ -17,6 +17,7 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
   const [serviceToEdit, setServiceToEdit] = useState(null);
+  const [serviceToDelete, setServiceToDelete] = useState(null);
   const [barberModalOpen, setBarberModalOpen] = useState(false);
   const [barberToEdit, setBarberToEdit] = useState(null);
   const [barberToDelete, setBarberToDelete] = useState(null);
@@ -99,6 +100,23 @@ export default function AdminSettings() {
       }
     } catch (err) {
       addToast(err.message || 'Failed to remove stylist', 'error');
+    }
+  };
+
+  // Delete Service
+  const handleConfirmDeleteService = async () => {
+    if (!serviceToDelete) return;
+    try {
+      const res = await apiRequest(`/api/services/${serviceToDelete._id}`, {
+        method: 'DELETE'
+      });
+      if (res.success) {
+        addToast(`Service '${serviceToDelete.name}' removed successfully`, 'info');
+        setServiceToDelete(null);
+        fetchAdminData();
+      }
+    } catch (err) {
+      addToast(err.message || 'Failed to remove service', 'error');
     }
   };
 
@@ -301,16 +319,26 @@ export default function AdminSettings() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
                   <button
                     onClick={() => {
                       setServiceToEdit(service);
                       setServiceModalOpen(true);
                     }}
+                    title="Edit Service"
                     className="w-8 h-8 rounded-full bg-[#F7F3EE] hover:bg-[#E4DBD0] border border-[#E4DBD0] flex items-center justify-center transition-colors cursor-pointer"
                     aria-label="Edit service"
                   >
                     <Icon icon="solar:pen-bold" className="w-4 h-4 text-[#1C1A18]" />
+                  </button>
+
+                  <button
+                    onClick={() => setServiceToDelete(service)}
+                    title="Delete Service"
+                    className="w-8 h-8 rounded-full bg-[#F7F3EE] hover:bg-[#ef4444]/20 border border-[#E4DBD0] text-[#4A4540] hover:text-[#ef4444] flex items-center justify-center transition-colors cursor-pointer"
+                    aria-label="Delete service"
+                  >
+                    <Icon icon="solar:trash-bin-trash-bold" className="w-4 h-4" />
                   </button>
 
                   <button
@@ -488,6 +516,7 @@ export default function AdminSettings() {
         onClose={() => setServiceModalOpen(false)}
         onSaved={fetchAdminData}
         service={serviceToEdit}
+        onDelete={(service) => setServiceToDelete(service)}
       />
 
       {/* Barber Modal */}
@@ -497,6 +526,38 @@ export default function AdminSettings() {
         onSaved={fetchAdminData}
         barber={barberToEdit}
       />
+
+      {/* Delete Service Confirmation Modal */}
+      <CustomModal
+        isOpen={!!serviceToDelete}
+        onClose={() => setServiceToDelete(null)}
+        title="Remove Service"
+        subtitle={serviceToDelete ? serviceToDelete.name : ''}
+        icon="solar:danger-triangle-bold"
+        maxWidth="max-w-sm"
+      >
+        <div className="space-y-4 text-xs">
+          <p className="text-[#1C1A18] text-sm leading-relaxed font-medium">
+            Are you sure you want to remove service <strong>{serviceToDelete?.name}</strong> from the service menu?
+          </p>
+          <div className="flex items-center justify-end gap-2.5 pt-2">
+            <button
+              type="button"
+              onClick={() => setServiceToDelete(null)}
+              className="px-5 py-2.5 rounded-full border border-[#E4DBD0] text-[#1C1A18] font-bold text-xs hover:bg-[#F7F3EE] transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmDeleteService}
+              className="px-5 py-2.5 rounded-full bg-[#ef4444] text-white font-bold text-xs hover:bg-[#dc2626] transition-colors cursor-pointer"
+            >
+              Confirm Remove
+            </button>
+          </div>
+        </div>
+      </CustomModal>
 
       {/* Delete Barber Confirmation Modal */}
       <CustomModal

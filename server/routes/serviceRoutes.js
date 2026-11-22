@@ -3,7 +3,8 @@ import {
   getServices,
   createService,
   updateService,
-  toggleServiceActive
+  toggleServiceActive,
+  deleteService
 } from '../controllers/serviceController.js';
 import { requireStaffAuth } from '../middlewares/authMiddleware.js';
 
@@ -16,5 +17,6 @@ router.get('/', getServices);
 router.post('/', requireStaffAuth, createService);
 router.put('/:id', requireStaffAuth, updateService);
 router.patch('/:id/toggle-active', requireStaffAuth, toggleServiceActive);
+router.delete('/:id', requireStaffAuth, deleteService);
 
 export default router;
