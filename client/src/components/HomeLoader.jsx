@@ -22,6 +22,44 @@ export default function HomeLoader() {
         </div>
       </div>
 
+      {/* Main Grid: Hero Island & KPI Floating Capsules */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        {/* Left Hero Dynamic Island Card */}
+        <div className="lg:col-span-7 rounded-[36px] bg-[#1C1A18] text-[#F7F3EE] p-6 md:p-8 border border-[#4A4540] shadow-xl flex flex-col justify-center">
+          <div className="grid md:grid-cols-2 gap-6 items-center w-full my-auto">
+            <div className="rounded-[28px] overflow-hidden aspect-video md:aspect-4/3 border border-[#4A4540] luxury-shimmer-dark" />
+            <div className="space-y-3">
+              <div className="h-3 w-28 rounded-full luxury-shimmer-dark" />
+              <div className="space-y-1.5">
+                <div className="h-6 w-4/5 rounded-full luxury-shimmer-dark" />
+                <div className="h-6 w-3/5 rounded-full luxury-shimmer-dark" />
+              </div>
+              <div className="h-3 w-full rounded-full luxury-shimmer-dark" />
+              <div className="h-10 w-40 rounded-full luxury-shimmer-dark pt-2" />
+            </div>
+          </div>
+        </div>
+
+        {/* Right: 4 KPI Dynamic Island Capsules */}
+        <div className="lg:col-span-5 grid grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="bg-[#FFFFFF] p-5 rounded-[28px] border border-[#E4DBD0] shadow-xs flex flex-col justify-between min-h-[140px]"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-full luxury-shimmer" />
+                <div className="h-5 w-12 rounded-full luxury-shimmer" />
+              </div>
+              <div className="space-y-1.5 mt-4">
+                <div className="h-7 w-16 rounded-full luxury-shimmer" />
+                <div className="h-3 w-24 rounded-full luxury-shimmer" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Stylist Floor Section Skeleton */}
       <div className="bg-[#FFFFFF] rounded-[36px] p-6 md:p-7 border border-[#E4DBD0] shadow-xs space-y-4">
         <div className="flex items-center justify-between pb-1">

@@ -96,8 +96,8 @@ export default function Home() {
 			{/* Main Grid: Hero Island & KPI Floating Capsules */}
 			<div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 				{/* Left Hero Dynamic Island Card */}
-				<div className="lg:col-span-7 rounded-[36px] bg-[#1C1A18] text-[#F7F3EE] p-6 md:p-8 border border-[#4A4540] shadow-xl flex flex-col justify-between space-y-6 animate-fade-in-up stagger-2">
-					<div className="grid md:grid-cols-2 gap-6 items-center">
+				<div className="lg:col-span-7 rounded-[36px] bg-[#1C1A18] text-[#F7F3EE] p-6 md:p-8 border border-[#4A4540] shadow-xl flex flex-col justify-center animate-fade-in-up stagger-2">
+					<div className="grid md:grid-cols-2 gap-6 items-center w-full my-auto">
 						{/* Salon Interior Preview Image in Rounded Capsule */}
 						<div className="relative rounded-[28px] overflow-hidden aspect-video md:aspect-4/3 border border-[#4A4540] shadow-md">
 							<img
