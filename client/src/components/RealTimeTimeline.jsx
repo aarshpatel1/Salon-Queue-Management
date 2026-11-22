@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
+import { formatTimer } from '../utils/timeFormat';
 
 export default function RealTimeTimeline({
   startedAt,
@@ -28,12 +29,6 @@ export default function RealTimeTimeline({
 
   const totalEstSeconds = (estimatedDuration || 30) * 60;
   const progressPercent = Math.min(100, Math.round((elapsedSeconds / totalEstSeconds) * 100));
-
-  const formatTimer = (totalSec) => {
-    const mins = Math.floor(totalSec / 60);
-    const secs = totalSec % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
 
   const formatTimeHM = (dateInput) => {
     if (!dateInput) return '--:--';

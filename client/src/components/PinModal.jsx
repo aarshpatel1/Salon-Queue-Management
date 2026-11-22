@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Icon } from '@iconify/react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function PinModal() {
   const { pinModalOpen, closePinModal, loginWithPin, pendingRoute, error, setError } = useAuth();
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Reset PIN when modal opens or closes
   useEffect(() => {
@@ -15,6 +16,24 @@ export default function PinModal() {
       setPin('');
     }
   }, [pinModalOpen]);
+
+  // Handle dismissal (by Escape key, close button, or backdrop click)
+  // Closes modal and redirects to last visited page if on a protected route
+  const handleDismiss = useCallback(() => {
+    closePinModal();
+    const lastPath = sessionStorage.getItem('elan_last_visited_path') || '/';
+    const isProtected =
+      ['/reception', '/admin'].some((p) => location.pathname.startsWith(p)) ||
+      location.pathname.startsWith('/barber');
+
+    if (isProtected || pendingRoute) {
+      if (window.history.state && window.history.state.idx > 0) {
+        navigate(-1);
+      } else {
+        navigate(lastPath);
+      }
+    }
+  }, [closePinModal, location.pathname, pendingRoute, navigate]);
 
   // Unified PIN submission handler
   const submitWithPin = useCallback(
@@ -48,7 +67,7 @@ export default function PinModal() {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        closePinModal();
+        handleDismiss();
         return;
       }
 
@@ -83,7 +102,7 @@ export default function PinModal() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [pinModalOpen, pin, loading, closePinModal, setError, submitWithPin]);
+  }, [pinModalOpen, pin, loading, handleDismiss, setError, submitWithPin]);
 
   if (!pinModalOpen) return null;
 
@@ -111,14 +130,14 @@ export default function PinModal() {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-transparent select-none animate-in fade-in duration-150"
-      onClick={closePinModal}
+      onClick={handleDismiss}
     >
       <div
         className="bg-[#FFFFFF] rounded-[36px] shadow-2xl max-w-sm w-full p-6 border border-[#E4DBD0] relative animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          onClick={closePinModal}
+          onClick={handleDismiss}
           className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#F7F3EE] text-[#4A4540] hover:text-[#1C1A18] flex items-center justify-center transition-colors cursor-pointer"
           aria-label="Close modal"
         >

@@ -1,8 +1,8 @@
+import 'dotenv/config';
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import passport from 'passport';
 import os from 'os';
 
@@ -15,8 +15,6 @@ import queueRoutes from './routes/queueRoutes.js';
 import barberRoutes from './routes/barberRoutes.js';
 import serviceRoutes from './routes/serviceRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
-
-dotenv.config();
 
 const app = express();
 const server = http.createServer(app);

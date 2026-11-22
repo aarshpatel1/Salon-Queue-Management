@@ -27,7 +27,7 @@ export default function Navbar() {
           <span className="hidden sm:inline-block w-1.5 h-1.5 rounded-full bg-[#C2B4A3]"></span>
 
           <span className="hidden sm:inline-block text-[11px] font-medium text-[#4A4540]">
-            Minimalist Dynamic Island Queue
+            Luxury Salon & Grooming
           </span>
         </div>
 
@@ -42,7 +42,7 @@ export default function Navbar() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#1C1A18] opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#1C1A18]"></span>
             </span>
-            <span className="hidden md:inline text-[11px] font-bold">Live Island</span>
+            <span className="hidden md:inline text-[11px] font-bold">Live Sync</span>
           </div>
 
           {/* Staff Lock Pill */}

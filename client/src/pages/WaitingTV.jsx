@@ -119,7 +119,7 @@ export default function WaitingTV() {
               {config?.salonName || 'ÉLAN ATELIER'}
             </h1>
             <p className="text-xs tracking-widest text-[#C2B4A3] uppercase font-bold">
-              Live Lounge Queue & Stylist Stations • Dynamic Island
+              Live Lounge Queue & Stylist Stations
             </p>
           </div>
         </div>
@@ -310,14 +310,14 @@ export default function WaitingTV() {
 
           <div className="pt-3 border-t border-[#4A4540]/40 flex items-center justify-between text-xs text-[#C2B4A3] shrink-0">
             <span>Scan QR at desk to join queue</span>
-            <span className="font-mono text-[#F7F3EE]">iOS 27 Dynamic Island Engine</span>
+            <span className="font-mono text-[#F7F3EE]">Live Queue Engine</span>
           </div>
         </div>
       </div>
 
       {/* Bottom Footer */}
       <div className="border-t border-[#4A4540]/40 pt-4 flex items-center justify-between text-xs text-[#C2B4A3] shrink-0">
-        <p>Élan Atelier Lounge Display • Dynamic Island Live Telemetry</p>
+        <p>Élan Atelier Lounge Display • Live Queue Telemetry</p>
         <p>Real-time continuous sync active</p>
       </div>
     </div>

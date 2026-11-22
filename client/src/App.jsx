@@ -22,6 +22,14 @@ function AppLayout() {
   const location = useLocation();
   const isDisplayScreen = location.pathname.startsWith('/display');
 
+  // Track the last visited non-protected page for PIN modal escape/cancel redirection
+  React.useEffect(() => {
+    const isProtected = ['/reception', '/admin'].some(p => location.pathname.startsWith(p)) || location.pathname.startsWith('/barber/');
+    if (!isProtected) {
+      sessionStorage.setItem('elan_last_visited_path', location.pathname + location.search);
+    }
+  }, [location.pathname, location.search]);
+
   if (isDisplayScreen) {
     return (
       <main className="h-[100dvh] max-h-[100dvh] w-screen overflow-hidden bg-[#1C1A18] text-[#F7F3EE]">
@@ -34,12 +42,12 @@ function AppLayout() {
 
   return (
     <div className="h-[100dvh] max-h-[100dvh] w-screen overflow-hidden flex bg-[#F7F3EE] text-[#1C1A18] font-sans antialiased">
-      {/* iOS 27 Floating Dynamic Island Sidebar (Desktop) */}
+      {/* Dynamic Island Sidebar (Desktop) */}
       <Sidebar />
 
       {/* Main Content Area - Strictly 100% dvh with Vertically Scrollable Inside */}
-      <div className="flex-1 h-[100dvh] max-h-[100dvh] flex flex-col min-w-0 overflow-hidden">
-        {/* Floating Dynamic Island Navbar Header (Fixed at top inside 100% dvh) */}
+      <div className="flex-1 h-[100dvh] max-h-[100dvh] flex flex-col min-w-0 overflow-hidden relative">
+        {/* Floating Navbar Header (Fixed at top inside 100% dvh) */}
         <div className="shrink-0 px-3 md:px-6 pt-3 md:pt-4 pb-1 z-30">
           <Navbar />
         </div>
@@ -79,10 +87,10 @@ function AppLayout() {
             />
           </Routes>
         </main>
-      </div>
 
-      {/* Floating iOS 27 Dynamic Island at Bottom Center */}
-      <DynamicIsland />
+        {/* Floating Status Bar Centered at Bottom of Main Content Section (Without Sidebar) */}
+        <DynamicIsland />
+      </div>
 
       {/* Global Staff PIN Modal */}
       <PinModal />

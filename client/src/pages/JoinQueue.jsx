@@ -127,7 +127,7 @@ export default function JoinQueue() {
         addToast(
           res.alreadyActive
             ? 'Active ticket found. Welcome back!'
-            : `Spot ${res.token.tokenNumber} reserved! Dynamic island activated.`,
+            : `Spot ${res.token.tokenNumber} reserved! Queue tracking activated.`,
           'success'
         );
 
@@ -155,7 +155,7 @@ export default function JoinQueue() {
         </NavLink>
 
         <span className="text-[10px] font-black uppercase tracking-widest text-[#1C1A18] bg-[#E4DBD0] px-3.5 py-1.5 rounded-full border border-[#C2B4A3]">
-          Self Check-In Island
+          Self Check-In
         </span>
       </div>
 
@@ -170,7 +170,7 @@ export default function JoinQueue() {
               Join the Queue
             </h1>
             <p className="text-xs text-[#4A4540] font-medium mt-0.5">
-              Élan Atelier • Minimalist Dynamic Island Live Queue
+              Élan Atelier • Live Salon Queue
             </p>
           </div>
         </div>
@@ -461,7 +461,7 @@ export default function JoinQueue() {
             </button>
 
             <p className="text-[10px] text-[#C2B4A3] text-center leading-relaxed">
-              Once submitted, your floating dynamic island will monitor your wait time in real-time.
+              Once submitted, your live queue status bar will monitor your wait time in real-time.
             </p>
           </div>
         </div>

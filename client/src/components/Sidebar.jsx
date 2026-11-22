@@ -24,7 +24,7 @@ export default function Sidebar() {
         </div>
         <div className="min-w-0">
           <h1 className="font-black text-sm tracking-widest text-[#F7F3EE] uppercase truncate">ÉLAN ATELIER</h1>
-          <p className="text-[9px] text-[#C2B4A3] tracking-widest uppercase font-semibold">Dynamic Island</p>
+          <p className="text-[9px] text-[#C2B4A3] tracking-widest uppercase font-semibold">Salon Queue</p>
         </div>
       </div>
 
@@ -108,7 +108,7 @@ export default function Sidebar() {
           </div>
           <h4 className="font-bold text-xs text-[#F7F3EE]">Live Queue Spot</h4>
           <p className="text-[10px] text-[#C2B4A3] leading-relaxed">
-            Real-time dynamic island synchronization for lounge guests and stylists.
+            Real-time queue synchronization for lounge guests and stylists.
           </p>
           <div className="pt-1">
             <NavLink

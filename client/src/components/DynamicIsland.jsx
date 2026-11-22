@@ -3,12 +3,20 @@ import { Icon } from '@iconify/react';
 import apiRequest from '../api/apiClient';
 import { useSocket } from '../context/SocketContext';
 import RealTimeTimeline from './RealTimeTimeline';
+import { formatTimer } from '../utils/timeFormat';
 
 export default function DynamicIsland() {
   const { lastSyncTime } = useSocket();
   const [tokenId, setTokenId] = useState(() => localStorage.getItem('elan_active_token_id'));
   const [tokenData, setTokenData] = useState(null);
   const [expanded, setExpanded] = useState(false);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  // 1-second live ticker for smooth countdown and elapsed timer
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Sync token ID from localStorage / events
   useEffect(() => {
@@ -41,7 +49,7 @@ export default function DynamicIsland() {
           setTokenData(res);
         }
       } catch (err) {
-        console.error('Failed to sync customer dynamic island status:', err);
+        console.error('Failed to sync customer queue status:', err);
       }
     };
 
@@ -55,6 +63,27 @@ export default function DynamicIsland() {
   const waitStats = tokenData.waitStats;
   const isDone = ['Done', 'Cancelled', 'No-show'].includes(token.status);
 
+  // Calculate live wait timer (countdown if target is in future, or elapsed wait time)
+  let waitTimerSeconds = Math.max(0, (waitStats?.waitMinutes ?? 0) * 60);
+  if (token.joinedAt && waitStats?.waitMinutes !== undefined) {
+    const joinedMs = new Date(token.joinedAt).getTime();
+    const targetMs = joinedMs + (waitStats.waitMinutes * 60 * 1000);
+    const diffSec = Math.floor((targetMs - currentTime) / 1000);
+    if (diffSec > 0) {
+      waitTimerSeconds = diffSec;
+    } else {
+      // If estimated duration passed, show elapsed time since joined
+      const elapsedSec = Math.max(0, Math.floor((currentTime - joinedMs) / 1000));
+      waitTimerSeconds = elapsedSec;
+    }
+  }
+
+  // Calculate in-chair live elapsed time
+  let inChairSeconds = 0;
+  if (token.status === 'In chair' && token.startedAt) {
+    inChairSeconds = Math.max(0, Math.floor((currentTime - new Date(token.startedAt).getTime()) / 1000));
+  }
+
   const handleDismiss = (e) => {
     e.stopPropagation();
     localStorage.removeItem('elan_active_token_id');
@@ -65,13 +94,13 @@ export default function DynamicIsland() {
 
   return (
     <>
-      {/* Floating iOS 27 Dynamic Island Pill at Bottom Center */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 select-none">
+      {/* Floating Status Bar at Bottom Center of the Section (Without Sidebar) */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 select-none pointer-events-auto">
         <div
           onClick={() => setExpanded(true)}
           className="flex items-center gap-3.5 px-5 py-2.5 bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] rounded-full shadow-2xl cursor-pointer hover:border-[#C2B4A3] transition-all transform hover:-translate-y-0.5 active:scale-98"
         >
-          {/* Pulsing Dynamic Island Camera / Status Dot */}
+          {/* Pulsing Status Dot */}
           <span className="relative flex h-3 w-3 shrink-0">
             <span
               className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
@@ -98,24 +127,39 @@ export default function DynamicIsland() {
             {token.tokenNumber}
           </span>
 
-          {/* Customer & Status Text */}
+          {/* Customer & Status Text with Live Timer */}
           <div className="flex items-center gap-2 text-xs">
-            <span className="font-bold text-[#F7F3EE] max-w-[100px] sm:max-w-[140px] truncate">
+            <span className="font-bold text-[#F7F3EE] max-w-[90px] sm:max-w-[130px] truncate">
               {token.customerName}
             </span>
             <span className="text-[#4A4540]">•</span>
             {token.status === 'Waiting' ? (
-              <span className="text-[#E4DBD0] font-semibold">
-                #{queuePos} in line (~{waitStats?.waitMinutes ?? 0}m wait)
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[#E4DBD0] font-semibold whitespace-nowrap">
+                  #{queuePos} in line
+                </span>
+                <span className="text-[#4A4540] hidden sm:inline">•</span>
+                <span className="inline-flex items-center gap-1.5 font-mono font-bold text-[#F7F3EE] bg-[#4A4540]/40 px-2.5 py-0.5 rounded-full border border-[#4A4540]/60">
+                  <Icon icon="solar:clock-circle-bold" className="w-3.5 h-3.5 text-[#C2B4A3]" />
+                  <span>{formatTimer(waitTimerSeconds)}</span>
+                </span>
+              </div>
             ) : token.status === 'Called' ? (
-              <span className="text-[#F7F3EE] font-black animate-pulse">
-                Proceed to Chair!
+              <span className="text-[#F7F3EE] font-black animate-pulse flex items-center gap-1.5">
+                <Icon icon="solar:bell-bing-bold" className="w-3.5 h-3.5 text-[#C2B4A3]" />
+                <span>Proceed to Chair!</span>
               </span>
             ) : token.status === 'In chair' ? (
-              <span className="text-[#22c55e] font-black">
-                In Chair (Active)
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[#22c55e] font-black whitespace-nowrap">
+                  In Chair
+                </span>
+                <span className="text-[#4A4540]">•</span>
+                <span className="inline-flex items-center gap-1.5 font-mono font-bold text-[#22c55e] bg-[#22c55e]/15 px-2.5 py-0.5 rounded-full border border-[#22c55e]/30">
+                  <Icon icon="solar:stopwatch-bold" className="w-3.5 h-3.5 text-[#22c55e]" />
+                  <span>{formatTimer(inChairSeconds)}</span>
+                </span>
+              </div>
             ) : (
               <span className="text-[#C2B4A3] font-semibold">{token.status}</span>
             )}
@@ -138,7 +182,7 @@ export default function DynamicIsland() {
         </div>
       </div>
 
-      {/* Expanded iOS 27 Dynamic Island Capsule Modal */}
+      {/* Expanded Live Queue Ticket Modal */}
       {expanded && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-transparent select-none animate-in fade-in duration-200"
@@ -148,7 +192,7 @@ export default function DynamicIsland() {
             className="w-full max-w-md rounded-[36px] bg-[#1C1A18] text-[#F7F3EE] border border-[#4A4540] p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header with Dynamic Island Title */}
+            {/* Header with Ticket Title */}
             <div className="flex items-center justify-between border-b border-[#4A4540]/50 pb-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-full bg-[#F7F3EE] flex items-center justify-center text-[#1C1A18]">
@@ -156,9 +200,9 @@ export default function DynamicIsland() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm text-[#F7F3EE] uppercase tracking-wider">
-                    Dynamic Island Ticket
+                    Live Queue Ticket
                   </h3>
-                  <p className="text-[10px] text-[#C2B4A3]">Live Queue Telemetry • Élan Atelier</p>
+                  <p className="text-[10px] text-[#C2B4A3]">Live Queue Status • Élan Atelier</p>
                 </div>
               </div>
 
@@ -181,11 +225,11 @@ export default function DynamicIsland() {
 
               {token.status === 'Waiting' ? (
                 <div className="pt-2">
-                  <p className="text-3xl font-black text-[#F7F3EE]">
-                    ~{waitStats?.waitMinutes ?? 0} Mins
+                  <p className="text-3xl font-black font-mono text-[#F7F3EE]">
+                    {formatTimer(waitTimerSeconds)}
                   </p>
                   <p className="text-xs text-[#C2B4A3] mt-0.5 font-medium">
-                    Estimated Wait Ahead
+                    Estimated Wait Timer Ahead (~{waitStats?.waitMinutes ?? 0} Mins)
                   </p>
                   <div className="mt-3 inline-flex items-center gap-2 bg-[#1C1A18] text-[#F7F3EE] px-4 py-1.5 rounded-full text-xs font-bold border border-[#4A4540]">
                     <Icon icon="solar:users-group-rounded-bold" className="w-4 h-4 text-[#C2B4A3]" />
@@ -207,6 +251,9 @@ export default function DynamicIsland() {
                 <div className="pt-2">
                   <p className="text-sm font-bold text-[#F7F3EE]">
                     Styling Session In Progress with {token.assignedBarberName || 'Stylist'}
+                  </p>
+                  <p className="text-2xl font-black font-mono text-[#22c55e] mt-1">
+                    {formatTimer(inChairSeconds)}
                   </p>
                 </div>
               ) : (
@@ -271,7 +318,7 @@ export default function DynamicIsland() {
                   onClick={() => setExpanded(false)}
                   className="w-full py-3 rounded-full bg-[#F7F3EE] text-[#1C1A18] font-bold text-xs hover:bg-[#E4DBD0] transition-colors cursor-pointer"
                 >
-                  Minimize to Bottom Island
+                  Minimize to Bottom Bar
                 </button>
               )}
             </div>

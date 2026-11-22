@@ -69,7 +69,46 @@
   box-shadow: 0 8px 24px -4px rgba(28, 26, 24, 0.08);
 }
 
-/* Minimalist Scrollbar */
+/* Custom Scrollbars Matching Élan Luxury Theme UI */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #C2B4A3 transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #C2B4A3;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #4A4540;
+}
+
+/* Scrollbar on Dark Surfaces (e.g., Sidebar, TV Display) */
+.bg-\[\#1C1A18\]::-webkit-scrollbar-thumb,
+.island-surface-dark::-webkit-scrollbar-thumb,
+aside::-webkit-scrollbar-thumb {
+  background-color: #4A4540;
+}
+
+.bg-\[\#1C1A18\]::-webkit-scrollbar-thumb:hover,
+.island-surface-dark::-webkit-scrollbar-thumb:hover,
+aside::-webkit-scrollbar-thumb:hover {
+  background-color: #C2B4A3;
+}
+
+/* Minimalist Scrollbar Helper */
 .scrollbar-thin::-webkit-scrollbar {
   width: 5px;
   height: 5px;

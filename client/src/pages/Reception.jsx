@@ -77,6 +77,44 @@ export default function Reception() {
     }
   };
 
+  // Start Service / Seat Guest for a barber station
+  const handleStartService = async (tokenId, customerName) => {
+    setActionLoading(`start-${tokenId}`);
+    try {
+      const res = await apiRequest('/api/queue/start-service', {
+        method: 'POST',
+        body: JSON.stringify({ tokenId })
+      });
+      if (res.success) {
+        addToast(`Seated ${customerName}. Live session started.`, 'success');
+        fetchReceptionData();
+      }
+    } catch (err) {
+      addToast(err.message || 'Failed to seat guest', 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Complete Service (Done) for a barber station
+  const handleCompleteService = async (tokenId, customerName) => {
+    setActionLoading(`complete-${tokenId}`);
+    try {
+      const res = await apiRequest('/api/queue/complete-service', {
+        method: 'POST',
+        body: JSON.stringify({ tokenId })
+      });
+      if (res.success) {
+        addToast(`Service concluded for ${customerName}. Chair is now available!`, 'success');
+        fetchReceptionData();
+      }
+    } catch (err) {
+      addToast(err.message || 'Failed to complete service', 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // Mark No-Show for a called token
   const handleMarkNoShow = (tokenId, customerName) => {
     setConfirmDialog({
@@ -180,9 +218,10 @@ export default function Reception() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {barbers.map((barber) => {
               const currentCust = barber.currentCustomer;
-              const hasCustomer = currentCust && currentCust.tokenId;
+              const hasCustomer = !!(currentCust && currentCust.tokenId);
               const isBreak = barber.status === 'On break';
-              const isServing = hasCustomer && currentCust.startedAt;
+              const isServing = hasCustomer && !!currentCust.startedAt;
+              const isCalled = hasCustomer && !currentCust.startedAt;
 
               return (
                 <div
@@ -206,14 +245,16 @@ export default function Reception() {
                         <p className="text-xs font-black text-[#1C1A18] truncate">{barber.name}</p>
                         <span
                           className={`text-[9px] font-black px-2.5 py-0.5 rounded-full inline-block border ${
-                            barber.status === 'Available'
+                            isServing
                               ? 'bg-[#1C1A18] text-[#F7F3EE] border-[#1C1A18]'
-                              : barber.status === 'Busy'
+                              : isCalled
                               ? 'bg-[#E4DBD0] text-[#1C1A18] border-[#C2B4A3]'
+                              : barber.status === 'Available'
+                              ? 'bg-[#1C1A18] text-[#F7F3EE] border-[#1C1A18]'
                               : 'bg-[#F7F3EE] text-[#4A4540] border-[#E4DBD0]'
                           }`}
                         >
-                          {barber.status}
+                          {isServing ? 'In Chair' : isCalled ? 'Called' : barber.status}
                         </span>
                       </div>
                     </div>
@@ -225,7 +266,7 @@ export default function Reception() {
                           <span className="text-xs font-black text-[#1C1A18] bg-white px-2.5 py-0.5 rounded-full border border-[#E4DBD0]">
                             {currentCust.tokenNumber}
                           </span>
-                          <span className="text-[11px] font-bold text-[#1C1A18] truncate max-w-[90px]">
+                          <span className="text-[11px] font-bold text-[#1C1A18] truncate max-w-[100px]">
                             {currentCust.customerName}
                           </span>
                         </div>
@@ -233,15 +274,53 @@ export default function Reception() {
                           {currentCust.services?.join(', ') || 'Grooming session'}
                         </p>
 
-                        {/* Real-Time Live Timeline for In-Chair Guest */}
-                        <div className="pt-1">
-                          <RealTimeTimeline
-                            startedAt={currentCust.startedAt || new Date()}
-                            estimatedDuration={currentCust.estimatedDuration || 30}
-                            status="In chair"
-                            compact={false}
-                          />
-                        </div>
+                        {/* If Called (awaiting arrival/seating in chair) */}
+                        {isCalled && (
+                          <div className="pt-1.5 space-y-2">
+                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E4DBD0] text-[#1C1A18] text-[10px] font-black border border-[#C2B4A3]">
+                              <span className="w-2 h-2 rounded-full bg-[#1C1A18] animate-ping shrink-0" />
+                              <span className="truncate">Client Called • Walking to Chair</span>
+                            </div>
+
+                            <div className="flex gap-1.5 pt-0.5">
+                              <button
+                                onClick={() => handleStartService(currentCust.tokenId, currentCust.customerName)}
+                                disabled={actionLoading === `start-${currentCust.tokenId}`}
+                                className="flex-1 py-1.5 px-2 rounded-full text-[10px] font-black bg-[#1C1A18] text-[#F7F3EE] hover:bg-[#4A4540] transition-colors cursor-pointer flex items-center justify-center gap-1 shadow-xs"
+                              >
+                                <Icon icon="solar:play-circle-bold" className="w-3.5 h-3.5 text-[#C2B4A3]" />
+                                <span>{actionLoading === `start-${currentCust.tokenId}` ? 'Starting...' : 'Seat Guest'}</span>
+                              </button>
+                              <button
+                                onClick={() => handleMarkNoShow(currentCust.tokenId, currentCust.customerName)}
+                                disabled={actionLoading === `noshow-${currentCust.tokenId}`}
+                                className="py-1.5 px-2.5 rounded-full text-[10px] font-bold bg-[#FFFFFF] border border-[#E4DBD0] text-[#4A4540] hover:text-[#ef4444] transition-colors cursor-pointer"
+                              >
+                                No-Show
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* If In Chair (Service Active) */}
+                        {isServing && (
+                          <div className="pt-1 space-y-2">
+                            <RealTimeTimeline
+                              startedAt={currentCust.startedAt}
+                              estimatedDuration={currentCust.estimatedDuration || 30}
+                              status="In chair"
+                              compact={true}
+                            />
+                            <button
+                              onClick={() => handleCompleteService(currentCust.tokenId, currentCust.customerName)}
+                              disabled={actionLoading === `complete-${currentCust.tokenId}`}
+                              className="w-full py-1.5 rounded-full text-[10px] font-black bg-[#1C1A18] text-[#F7F3EE] hover:bg-[#4A4540] transition-colors cursor-pointer flex items-center justify-center gap-1 shadow-xs"
+                            >
+                              <Icon icon="solar:check-circle-bold" className="w-3.5 h-3.5 text-[#C2B4A3]" />
+                              <span>{actionLoading === `complete-${currentCust.tokenId}` ? 'Completing...' : 'Complete (Done)'}</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="p-5 rounded-[24px] bg-[#F7F3EE]/40 border border-dashed border-[#E4DBD0] text-center mb-3">
@@ -251,17 +330,19 @@ export default function Reception() {
                     )}
                   </div>
 
-                  {/* Call Next Pill Button */}
-                  <button
-                    onClick={() => handleCallNext(barber._id, barber.name)}
-                    disabled={isBreak || hasCustomer || actionLoading === `call-${barber._id}`}
-                    className="w-full py-2.5 rounded-full text-xs font-bold bg-[#1C1A18] hover:bg-[#4A4540] text-[#F7F3EE] disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                  >
-                    <Icon icon="solar:phone-calling-rounded-bold" className="w-3.5 h-3.5 text-[#C2B4A3]" />
-                    <span>
-                      {actionLoading === `call-${barber._id}` ? 'Calling...' : 'Call Next Client'}
-                    </span>
-                  </button>
+                  {/* Call Next Pill Button - Only shown when chair is empty */}
+                  {!hasCustomer && (
+                    <button
+                      onClick={() => handleCallNext(barber._id, barber.name)}
+                      disabled={isBreak || actionLoading === `call-${barber._id}`}
+                      className="w-full py-2.5 rounded-full text-xs font-bold bg-[#1C1A18] hover:bg-[#4A4540] text-[#F7F3EE] disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                    >
+                      <Icon icon="solar:phone-calling-rounded-bold" className="w-3.5 h-3.5 text-[#C2B4A3]" />
+                      <span>
+                        {actionLoading === `call-${barber._id}` ? 'Calling...' : 'Call Next Client'}
+                      </span>
+                    </button>
+                  )}
                 </div>
               );
             })}

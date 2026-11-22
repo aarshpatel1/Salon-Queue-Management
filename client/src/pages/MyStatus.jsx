@@ -6,6 +6,7 @@ import { useSocket } from '../context/SocketContext';
 import { playChime, triggerVibration } from '../utils/audioChime';
 import confetti from 'canvas-confetti';
 import RealTimeTimeline from '../components/RealTimeTimeline';
+import { formatTimer } from '../utils/timeFormat';
 
 export default function MyStatus() {
   const { id } = useParams();
@@ -16,6 +17,13 @@ export default function MyStatus() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [hasCelebrated, setHasCelebrated] = useState(false);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  // 1-second live ticker
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const fetchStatus = async () => {
     try {
@@ -54,6 +62,19 @@ export default function MyStatus() {
   const isInChair = token?.status === 'In chair';
   const isDone = token?.status === 'Done';
 
+  // Calculate live countdown / elapsed wait timer
+  let waitTimerSeconds = Math.max(0, (waitStats?.waitMinutes ?? 0) * 60);
+  if (token?.joinedAt && waitStats?.waitMinutes !== undefined) {
+    const joinedMs = new Date(token.joinedAt).getTime();
+    const targetMs = joinedMs + (waitStats.waitMinutes * 60 * 1000);
+    const diffSec = Math.floor((targetMs - currentTime) / 1000);
+    if (diffSec > 0) {
+      waitTimerSeconds = diffSec;
+    } else {
+      waitTimerSeconds = Math.max(0, Math.floor((currentTime - joinedMs) / 1000));
+    }
+  }
+
   const formatOrdinal = (n) => {
     const s = ['th', 'st', 'nd', 'rd'];
     const v = n % 100;
@@ -64,7 +85,7 @@ export default function MyStatus() {
     return (
       <div className="h-full flex flex-col items-center justify-center p-6 text-center select-none">
         <Icon icon="solar:refresh-bold" className="w-8 h-8 text-[#1C1A18] animate-spin mb-3" />
-        <p className="text-xs font-bold text-[#1C1A18]">Connecting to Live Dynamic Island...</p>
+        <p className="text-xs font-bold text-[#1C1A18]">Connecting to Live Queue...</p>
       </div>
     );
   }
@@ -192,10 +213,13 @@ export default function MyStatus() {
         {token.status === 'Waiting' && (
           <div className="p-6 rounded-[28px] bg-[#F7F3EE] border border-[#E4DBD0] text-center space-y-2">
             <span className="text-[10px] uppercase font-bold tracking-widest text-[#4A4540]">
-              Estimated Wait Ahead
+              Estimated Wait Timer Ahead
             </span>
-            <p className="text-4xl font-black text-[#1C1A18]">
-              ~{waitStats?.waitMinutes ?? 0}m
+            <p className="text-4xl font-black font-mono text-[#1C1A18]">
+              {formatTimer(waitTimerSeconds)}
+            </p>
+            <p className="text-xs text-[#4A4540] font-semibold">
+              ~{waitStats?.waitMinutes ?? 0} mins estimated ahead
             </p>
             <div className="pt-2 flex items-center justify-center gap-2">
               <span className="text-xs font-bold text-[#1C1A18] bg-[#FFFFFF] px-4 py-1 rounded-full border border-[#E4DBD0]">

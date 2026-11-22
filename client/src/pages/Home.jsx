@@ -48,7 +48,7 @@ export default function Home() {
               {config?.salonName || 'Élan Atelier'}
             </h1>
             <p className="text-xs text-[#4A4540] font-medium">
-              Minimalist Luxury Grooming • iOS 27 Dynamic Island Queue
+              Minimalist Luxury Grooming • Real-Time Salon Queue
             </p>
           </div>
         </div>
@@ -101,14 +101,14 @@ export default function Home() {
             {/* Hero Copy */}
             <div className="space-y-3.5">
               <span className="text-[10px] uppercase tracking-widest text-[#C2B4A3] font-black">
-                Dynamic Island Experience
+                Live Queue Experience
               </span>
               <h2 className="text-xl md:text-2xl font-black leading-tight text-[#F7F3EE]">
                 Your styling session, <br />
                 on your schedule.
               </h2>
               <p className="text-xs text-[#E4DBD0] leading-relaxed">
-                Join our live queue, receive real-time telemetry via our floating dynamic island, and arrive exactly when your chair opens.
+                Join our live queue, receive real-time updates directly on your device, and arrive exactly when your chair opens.
               </p>
 
               <div className="pt-2">
